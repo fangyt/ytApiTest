@@ -1,0 +1,61 @@
+{
+    "getInitInfo": {
+        "rtn": 0,
+        "data": {
+            "userExtInfo": {
+                "userId": 2661076,
+                "gender": 1,
+                "birthday": "1990-04-09",
+                "height": 180,
+                "weight": 90.0,
+                "nickname": "\u6211\u662f\u6d4b\u8bd5\u6635\u79f0TY",
+                "isNewUser": false,
+                "face": "https://thirdwx.qlogo.cn/mmopen/RN1WYzbTlv24wQNBNPqGUrevEG4Dye64lUZw7icqRgLpTNR9V4WkxhVnBNPeEJbdKnpAPwfG0TdtEqE576cm7iaofC2B3N2xD1/132"
+            },
+            "hr": {
+                "restingHR": 117,
+                "isRestingHRMeasured": true,
+                "lastRestingHRMeasureTime": "2020-01-06 15:25:00",
+                "maxHR": 181,
+                "hrStage1Min": 149,
+                "hrStage1Max": 155,
+                "hrStage2Min": 156,
+                "hrStage2Max": 161,
+                "hrStage3Min": 162,
+                "hrStage3Max": 168,
+                "hrStage4Min": 169,
+                "hrStage4Max": 174,
+                "hrStage5Min": 175,
+                "hrStage5Max": 181
+            },
+            "devices": [],
+            "global": {
+                "enableHRSettings": true
+            },
+            "firmwareInfo": {
+                "firmwareDesc": "1.\u4fee\u590d\u82e5\u5e72bug",
+                "firmwareVer": "V1.2.2",
+                "fileCrc": "3288134133",
+                "fileName": "monkey_app.dat",
+                "fileSize": 141,
+                "fileUrl2": "https://asset.supermonkey.com.cn/smart/firmware/1/20200119172208_1307252839.bin",
+                "fileSize2": 81672,
+                "fileName2": "monkey_app.bin",
+                "fileUrl": "https://asset.supermonkey.com.cn/smart/firmware/1/20200119172208_3288134133.dat",
+                "fileCrc2": "1307252839"
+            }
+        }
+    },
+    "login2": {
+        "rtn": 0,
+        "data": {
+            "sessionId": "9AD267B5D1F52713FDDS5Q5Z2E575MQ71WXWSUU4",
+            "userinfo": {
+                "userId": 2661076,
+                "nickname": "Ty",
+                "gender": 1,
+                "face": "https://thirdwx.qlogo.cn/mmopen/RN1WYzbTlv24wQNBNPqGUrevEG4Dye64lUZw7icqRgLpTNR9V4WkxhVnBNPeEJbdKnpAPwfG0TdtEqE576cm7iaofC2B3N2xD1/132"
+            }
+        }
+    }
+}
