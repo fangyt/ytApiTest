@@ -51,6 +51,7 @@ class YamlSingleton():
     def get_json_data(self):
         pass
 
+__CONFIG__ = YamlSingleton().yaml_data
 
 def parser_response(response):
     '''
@@ -85,15 +86,9 @@ def parsing_case_yaml_data(interface_key=None, assert_key=None, assert_value_key
     :param get_case_key:
     :return:
     '''
-
-    yaml_file_path = file.find_obj_yaml_file()
-
-    if not yaml_file_path:
-        return '找不到yaml数据文件'
-
     try:
 
-        dic = YamlSingleton().yaml_data
+        dic = __CONFIG__
 
         if interface_key and \
                 assert_key and \
