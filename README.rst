@@ -124,3 +124,12 @@
     ytApiTest.assert_body_include_value(response,assert_value)
     #参数说明：response(接口返回response对象),assert_value(.yaml文件内断言值)
 
+
+.. code:: python
+
+    #断言返回值中URL状态是否为200方法
+    import ytApiTest
+    #读取.yaml文件内对应的接口值并发送post请求到后台,返回response对象
+    ytApiTest.assert_response_url_status(response）
+    #参数说明：response(接口返回response对象)
+

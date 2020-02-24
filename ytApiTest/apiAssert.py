@@ -95,7 +95,6 @@ def assert_body_include_value(body=None, assertValue=None):
 
     assert operator.eq(len(assert_difference_info), 0), assert_error_info(
         fmt_assert_info(body, assertValue, error_info))
-    assert_response_url_status(body_str)
 
 
 def assert_body_ep_value(body=None, assertValue=None):
@@ -121,22 +120,24 @@ def assert_body_ep_value(body=None, assertValue=None):
 
     assert operator.eq(len(assert_difference_info), 0), assert_error_info(
         fmt_assert_info(body, assertValue, error_info))
-    assert_response_url_status(body_str)
 
 
-def assert_response_url_status(response_str):
+def assert_response_url_status(response):
     '''
     断言返回值中所有URL是否可以正常访问
-    :param response_str: 后台返回值，以字符串形式传入
+    :param response: 后台返回值
     :return:
     '''
+
+    response_str = parsingData.parser_response(response)
+
     for rep_value in response_str.split(','):
 
         if rep_value.rfind('https') != -1:
             url = str(rep_value[rep_value.rfind('https'):]).replace("\"", '').replace(',', '')
             requests.packages.urllib3.disable_warnings()
-            r = requests.get(remove_special_characters(url), verify=False)
-            assert_url_code(r, 200)
+            body = requests.get(remove_special_characters(url), verify=False)
+            assert operator.eq(body.status_code, 200), fmt_assert_info(body, url, body.status_code)
 
 
 def splice_regula_expression(dic):
@@ -192,7 +193,7 @@ def interception_json_assert_value(assert_value_str: str, response_str: str):
 
 
 def find_response_assert_value(assert_value: str, response_value: str):
-    # 我也不知道我写了什么 -_-!!!,反正有个隐藏bug，就是头部尾部都找不到的时候没有处理~~，他妈的有问题再改就是了
+
     response_value_list = response_value.translate(response_value.maketrans('{}[]', '    ')).replace(' ', '').split(',')
 
     assert_value_list = assert_value.translate(response_value.maketrans('{}[]', '    ')).replace(' ', '').split(',')
@@ -221,7 +222,6 @@ def find_response_assert_value(assert_value: str, response_value: str):
             interception_list_response_value = [v.replace(' ', '') for v in interception_list_response_value]
             return interception_list_response_value
 
-            # print(','.join(interception_list_response_value))
         elif response_value_list.count(start_str) and not response_value_list.count(end_str):
             # 处理只有头部匹配情况
 
@@ -239,6 +239,7 @@ def find_response_assert_value(assert_value: str, response_value: str):
                                                                                                 -1])
 
             return interception_list_response_value
+
         elif not response_value_list.count(start_str) and response_value_list.count(end_str):
             # 处理只有头部匹配情况
 
@@ -265,6 +266,7 @@ def find_response_assert_value(assert_value: str, response_value: str):
 def interception_list_last_special_chars(assert_last_value: str, response_lase_value: str):
     one_index = assert_last_value.find('}')
     two_index = assert_last_value.find(']')
+
     if one_index != -1 and two_index != -1:
 
         value = assert_last_value[one_index if one_index < two_index else two_index:]
@@ -287,10 +289,12 @@ def interception_list_last_special_chars(assert_last_value: str, response_lase_v
 
 
 def special_last_chars_index(chars: str):
+
     split_value = chars.split(':')[1]
     one_index = split_value.find('}')
     two_index = split_value.find(']')
     index = one_index if one_index > two_index else two_index
+
     return index - 1
 
 
