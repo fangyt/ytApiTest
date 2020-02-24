@@ -84,8 +84,9 @@ def post(interface_key,case_key):
         save_account_cookies()
         post(interface_key,case_key)
 
+    else:
 
-    parsingData.save_response_data(response)
+        parsingData.save_response_data(response)
 
     return response
 

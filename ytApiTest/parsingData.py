@@ -33,8 +33,6 @@ class YamlSingleton():
         :return:
         '''
 
-        print('----------------')
-
         yaml_file_path = file.find_obj_yaml_file()
 
         if not yaml_file_path:
@@ -132,9 +130,9 @@ def save_response_data(response):
 
     old_json_data = parsing_json_data()
 
-    json_value.update(old_json_data.copy())
+    old_json_data.update(json_value)
 
-    json_data = json.dumps(json_value, indent=4)
+    json_data = json.dumps(old_json_data, indent=4)
 
     try:
 
