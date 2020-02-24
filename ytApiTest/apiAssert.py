@@ -129,15 +129,17 @@ def assert_response_url_status(response):
     :return:
     '''
 
-    response_str = parsingData.parser_response(response)
-
+    response_str = json.dumps(parsingData.parser_response(response))
     for rep_value in response_str.split(','):
 
         if rep_value.rfind('https') != -1:
             url = str(rep_value[rep_value.rfind('https'):]).replace("\"", '').replace(',', '')
             requests.packages.urllib3.disable_warnings()
             body = requests.get(remove_special_characters(url), verify=False)
-            assert operator.eq(body.status_code, 200), fmt_assert_info(body, url, body.status_code)
+            error_info = {url: body.status_code}
+            assert operator.eq(body.status_code, 200), fmt_assert_info(differenceValue=error_info,
+                                                                       body=response,
+                                                                       assertValue=200)
 
 
 def splice_regula_expression(dic):
