@@ -125,13 +125,17 @@ def assert_body_ep_value(body=None, assertValue=None):
 
 
 def assert_response_url_status(response_str):
-    url_data_list = re.findall("[a-zA-z]+://[^\s]*", response_str)
-    if len(url_data_list):
-        for index, url in enumerate(url_data_list):
-            url = str(url).replace("\"", '').replace(',', '')
+    '''
+    断言返回值中所有URL是否可以正常访问
+    :param response_str: 后台返回值，以字符串形式传入
+    :return:
+    '''
+    for rep_value in response_str.split(','):
+
+        if rep_value.rfind('https') != -1:
+            url = str(rep_value[rep_value.rfind('https'):]).replace("\"", '').replace(',', '')
             requests.packages.urllib3.disable_warnings()
             r = requests.get(remove_special_characters(url), verify=False)
-            r.url
             assert_url_code(r, 200)
 
 
