@@ -71,20 +71,10 @@ def assert_body_include_value(body=None, assertValue=None):
 
     body_str = json.dumps(parsingData.parser_response(body), ensure_ascii=False)
     assert_str = json.dumps(assertValue, ensure_ascii=False)
-    if len(assert_str.split(',')) == 1:
-        assert remove_special_characters(body_str).split(',').count(
-            remove_special_characters(assert_str).split(',')[0]), fmt_assert_info(body, assertValue, assert_str)
 
-        return
+    response_str_set = set(interception_response_value(body_str,assert_str))
+    assert_str_set = set(split_string(assert_str))
 
-    matching_value = find_response_assert_value(assert_value=assert_str,
-                                                response_value=body_str)
-    if operator.eq(None, matching_value):
-        assert_error_info(fmt_assert_info(body, assertValue, '返回值不包含断言数据'))
-        print('找不到断言数据', matching_value)
-        return assert_error_info('返回值不包含断言数据')
-    response_str_set = set(matching_value)
-    assert_str_set = set(assert_str.replace(' ', '').split(','))
     assert_difference_info = list(assert_str_set.difference(response_str_set))
     response_difference_info = list(response_str_set.difference(assert_str_set))
     response_difference_info.sort()
@@ -95,6 +85,31 @@ def assert_body_include_value(body=None, assertValue=None):
 
     assert operator.eq(len(assert_difference_info), 0), assert_error_info(
         fmt_assert_info(body, assertValue, error_info))
+
+    # if len(assert_str.split(',')) == 1:
+    #     assert remove_special_characters(body_str).split(',').count(
+    #         remove_special_characters(assert_str).split(',')[0]), fmt_assert_info(body, assertValue, assert_str)
+    #
+    #     return
+    #
+    # matching_value = find_response_assert_value(assert_value=assert_str,
+    #                                             response_value=body_str)
+    # if operator.eq(None, matching_value):
+    #     assert_error_info(fmt_assert_info(body, assertValue, '返回值不包含断言数据'))
+    #     print('找不到断言数据', matching_value)
+    #     return assert_error_info('返回值不包含断言数据')
+    # response_str_set = set(matching_value)
+    # assert_str_set = set(assert_str.replace(' ', '').split(','))
+    # assert_difference_info = list(assert_str_set.difference(response_str_set))
+    # response_difference_info = list(response_str_set.difference(assert_str_set))
+    # response_difference_info.sort()
+    # assert_difference_info.sort()
+    # error_info = {'ASSERT': '{assert_difference_info}'.format(assert_difference_info=assert_difference_info),
+    #               '************': '***********', 'RESPONSE': '{response_difference_info}'.format(
+    #         response_difference_info=response_difference_info)}
+    #
+    # assert operator.eq(len(assert_difference_info), 0), assert_error_info(
+    #     fmt_assert_info(body, assertValue, error_info))
 
 
 def assert_body_ep_value(body=None, assertValue=None):
@@ -319,7 +334,167 @@ def interception_colon_before_value(interception_value: str, is_last=False):
         return interception_value[interception_value.rfind(':'):]
 
     return interception_value[:interception_value.rfind(':')]
+#------------优化方法---------------
+def interception_response_value(response_str:str,assert_str:str):
 
+    '''
+    截取返回值中的断言值
+    :param response_str:
+    :param assert_str:
+    :return:
+    '''
+
+
+    if get_interception_index(response_str,assert_str).__contains__('first_index'):
+
+        return replace_list_chars_structure(response_list=split_string(response_str)[get_interception_index(response_str,assert_str)['first_index']:][:len(assert_str.split(','))],
+                                            assert_value=split_string(assert_str))
+
+    elif get_interception_index(response_str,assert_str).__contains__('last_index'):
+
+        return replace_list_chars_structure(response_list=split_string(response_str)[:get_interception_index(response_str,assert_str)['last_index'] + 1][-len(assert_str.split(',')):],
+                                            assert_value=split_string(assert_str))
+
+    elif len(assert_str.split(',')) == 1:
+
+        return singleton_assert_value(response_str,assert_str)
+
+    else:
+
+        return '未找到断言数据'
+
+def split_string(string:str):
+
+    return string.replace(' ','').split(',')
+
+def rem_special_chars(string:str):
+    '''
+    删除特殊大括号中括号空格特殊字符
+    :param string:
+    :return:
+    '''
+
+    remap = {
+        ord("{"): None,
+        ord("["): None,
+        ord("}"): None,
+        ord(']'): None,
+        ord(' '): None
+
+    }
+
+    return string.translate(remap)
+
+def get_interception_index(response_str:str,find_value:str):
+
+    '''
+    获取返回值列表截取下标
+    :return:
+    '''
+
+    rep_li = rem_special_chars(response_str).split(',')
+    find_value_li = rem_special_chars(find_value).split(',')
+
+    find_value_first = find_value_li[0]
+    find_value_last  = find_value_li[-1]
+
+    if rep_li.count(find_value_first):
+
+        return {'first_index':rep_li.index(find_value_first)}
+
+    elif rep_li.count(find_value_last) :
+
+        return {'last_index':rep_li.index(find_value_last)}
+
+    else: return {}
+
+def replace_list_chars_structure(response_list:list,assert_value:list):
+    '''
+    替换最外围数据结构，以断言值为准
+    :param response_list:
+    :param assert_value:
+    :return:
+    '''
+
+    # 长度为1的时候下标取值-1和0其实是一个值，
+
+
+    assert_first_value = iter(get_first_chars_index(assert_value[0]).keys()).__next__()[:iter(get_first_chars_index(assert_value[0]).values()).__next__()]
+    assert_last_value = iter(get_last_chars_index(assert_value[-1]).keys()).__next__()[iter(get_last_chars_index(assert_value[-1]).values()).__next__():]
+
+
+    rep_first_value = assert_first_value + iter(get_first_chars_index(response_list[0]).keys()).__next__()[iter(get_first_chars_index(response_list[0]).values()).__next__():]
+    rep_last_value = iter(get_last_chars_index(response_list[-1]).keys()).__next__()[:iter(get_last_chars_index(response_list[-1]).values()).__next__()] + assert_last_value
+
+    response_list[0] = response_list[0].split(':')[0] = rep_first_value
+    response_list[-1] = response_list[-1].split(':')[-1] = rep_last_value
+    return response_list
+
+def get_first_chars_index(first_chars:str):
+
+    '''
+    从右边开始查找中括号大括号下标
+    :param first_chars:
+    :return:
+    '''
+
+    key =  first_chars.split(':')[0]
+    brace_index = key.rfind('{')
+    brackets_index = key.rfind('[')
+
+    return {key:max(brace_index,brackets_index) + 1}
+
+def get_last_chars_index(last_chars:str):
+    '''
+    从左边开始查找查找中括号大括号下标
+    :param last_chars:
+    :return:
+    '''
+
+    key = last_chars.split(':')[-1]
+
+    brace_index = key.find('}')
+    brackets_index = key.find(']')
+
+    index = None
+
+    if brace_index and brackets_index != -1:
+
+        index = min(brace_index,brackets_index)
+
+    elif brackets_index == -1:
+
+        index = brace_index
+
+    elif brace_index == -1:
+
+        index = brackets_index
+
+    return {key:index}
+
+def singleton_assert_value(response_str:str,assert_str:str):
+    '''
+    截取返回值单个值*****好像过度封装了
+    :param response_str:
+    :param assert_str:
+    :return:
+    '''
+    if rem_special_chars(response_str).split(',').count(rem_special_chars(assert_str)):
+
+        response_value = split_string(response_str)[rem_special_chars(response_str).split(',').index(rem_special_chars(assert_str))]
+        response_value_list = response_value.split(':')
+        response_value_list[-1] = iter(get_last_chars_index(split_string(response_value)[0]).keys()).__next__()[:iter(get_last_chars_index(split_string(response_value)[0]).values()).__next__()] + \
+            iter(get_last_chars_index(split_string(assert_str)[0]).keys()).__next__()[iter(get_last_chars_index(split_string(assert_str)[0]).values()).__next__():]
+
+        response_value_list[0] = split_string(assert_str)[0].split(':')[0]
+
+        return ':'.join(response_value_list)
+
+    else:
+
+        value = assert_str.replace(' ','')[:assert_str.replace(' ','').rfind(':')][1:]
+
+        return '{' + response_str.replace(' ','')[response_str.replace(' ','').find(value):][:response_str.replace(' ','')[response_str.replace(' ','').find(value):].find(',')] + '}'
 
 if __name__ == '__main__':
     s = '{{"userExtInfo":{"userId":2661076'
