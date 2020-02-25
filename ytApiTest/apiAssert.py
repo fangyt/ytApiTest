@@ -72,7 +72,7 @@ def assert_body_include_value(body=None, assertValue=None):
     body_str = json.dumps(parsingData.parser_response(body), ensure_ascii=False)
     assert_str = json.dumps(assertValue, ensure_ascii=False)
 
-    response_str_set = set(interception_response_value(body_str,assert_str))
+    response_str_set = set(interception_response_value(body_str, assert_str))
     assert_str_set = set(split_string(assert_str))
 
     assert_difference_info = list(assert_str_set.difference(response_str_set))
@@ -210,7 +210,6 @@ def interception_json_assert_value(assert_value_str: str, response_str: str):
 
 
 def find_response_assert_value(assert_value: str, response_value: str):
-
     response_value_list = response_value.translate(response_value.maketrans('{}[]', '    ')).replace(' ', '').split(',')
 
     assert_value_list = assert_value.translate(response_value.maketrans('{}[]', '    ')).replace(' ', '').split(',')
@@ -306,7 +305,6 @@ def interception_list_last_special_chars(assert_last_value: str, response_lase_v
 
 
 def special_last_chars_index(chars: str):
-
     split_value = chars.split(':')[1]
     one_index = split_value.find('}')
     two_index = split_value.find(']')
@@ -334,9 +332,10 @@ def interception_colon_before_value(interception_value: str, is_last=False):
         return interception_value[interception_value.rfind(':'):]
 
     return interception_value[:interception_value.rfind(':')]
-#------------优化方法---------------
-def interception_response_value(response_str:str,assert_str:str):
 
+
+# ------------优化方法---------------
+def interception_response_value(response_str: str, assert_str: str):
     '''
     截取返回值中的断言值
     :param response_str:
@@ -344,30 +343,33 @@ def interception_response_value(response_str:str,assert_str:str):
     :return:
     '''
 
+    if len(assert_str.split(',')) == 1:
+        return singleton_assert_value(response_str, assert_str)
 
-    if get_interception_index(response_str,assert_str).__contains__('first_index'):
+    if get_interception_index(response_str, assert_str).__contains__('first_index'):
 
-        return replace_list_chars_structure(response_list=split_string(response_str)[get_interception_index(response_str,assert_str)['first_index']:][:len(assert_str.split(','))],
+        return replace_list_chars_structure(
+            response_list=split_string(response_str)[get_interception_index(response_str, assert_str)['first_index']:][
+                          :len(assert_str.split(','))],
+            assert_value=split_string(assert_str))
+
+    elif get_interception_index(response_str, assert_str).__contains__('last_index'):
+
+        return replace_list_chars_structure(response_list=split_string(response_str)[
+                                                          :get_interception_index(response_str, assert_str)[
+                                                               'last_index'] + 1][-len(assert_str.split(',')):],
                                             assert_value=split_string(assert_str))
-
-    elif get_interception_index(response_str,assert_str).__contains__('last_index'):
-
-        return replace_list_chars_structure(response_list=split_string(response_str)[:get_interception_index(response_str,assert_str)['last_index'] + 1][-len(assert_str.split(',')):],
-                                            assert_value=split_string(assert_str))
-
-    elif len(assert_str.split(',')) == 1:
-
-        return singleton_assert_value(response_str,assert_str)
 
     else:
 
         return '未找到断言数据'
 
-def split_string(string:str):
 
-    return string.replace(' ','').split(',')
+def split_string(string: str):
+    return string.replace(' ', '').split(',')
 
-def rem_special_chars(string:str):
+
+def rem_special_chars(string: str):
     '''
     删除特殊大括号中括号空格特殊字符
     :param string:
@@ -385,8 +387,8 @@ def rem_special_chars(string:str):
 
     return string.translate(remap)
 
-def get_interception_index(response_str:str,find_value:str):
 
+def get_interception_index(response_str: str, find_value: str):
     '''
     获取返回值列表截取下标
     :return:
@@ -396,55 +398,70 @@ def get_interception_index(response_str:str,find_value:str):
     find_value_li = rem_special_chars(find_value).split(',')
 
     find_value_first = find_value_li[0]
-    find_value_last  = find_value_li[-1]
+    find_value_last = find_value_li[-1]
 
     if rep_li.count(find_value_first):
 
-        return {'first_index':rep_li.index(find_value_first)}
+        return {'first_index': rep_li.index(find_value_first)}
 
-    elif rep_li.count(find_value_last) :
+    elif rep_li.count(find_value_last):
 
-        return {'last_index':rep_li.index(find_value_last)}
+        return {'last_index': rep_li.index(find_value_last)}
 
-    else: return {}
+    else:
+        return {}
 
-def replace_list_chars_structure(response_list:list,assert_value:list):
+
+def replace_list_chars_structure(response_list: list, assert_value: list):
     '''
     替换最外围数据结构，以断言值为准
     :param response_list:
     :param assert_value:
     :return:
     '''
-
     # 长度为1的时候下标取值-1和0其实是一个值，
 
+    assert_first_value = iter(get_first_chars_index(assert_value[0]).keys()).__next__()[
+                         :iter(get_first_chars_index(assert_value[0]).values()).__next__()]
+    assert_last_value = iter(get_last_chars_index(assert_value[-1]).keys()).__next__()[
+                        iter(get_last_chars_index(assert_value[-1]).values()).__next__():]
 
-    assert_first_value = iter(get_first_chars_index(assert_value[0]).keys()).__next__()[:iter(get_first_chars_index(assert_value[0]).values()).__next__()]
-    assert_last_value = iter(get_last_chars_index(assert_value[-1]).keys()).__next__()[iter(get_last_chars_index(assert_value[-1]).values()).__next__():]
+    rep_first_value = assert_first_value + iter(get_first_chars_index(response_list[0]).keys()).__next__()[
+                                           iter(get_first_chars_index(response_list[0]).values()).__next__():]
+    rep_last_value = iter(get_last_chars_index(response_list[-1]).keys()).__next__()[
+                     :iter(get_last_chars_index(response_list[-1]).values()).__next__()] + assert_last_value
 
+    if iter(get_last_chars_index(response_list[-1]).values()).__next__() == -1:
+        rep_last_value = iter(get_last_chars_index(response_list[-1]).keys()).__next__() + rep_last_value
 
-    rep_first_value = assert_first_value + iter(get_first_chars_index(response_list[0]).keys()).__next__()[iter(get_first_chars_index(response_list[0]).values()).__next__():]
-    rep_last_value = iter(get_last_chars_index(response_list[-1]).keys()).__next__()[:iter(get_last_chars_index(response_list[-1]).values()).__next__()] + assert_last_value
+    t = response_list[0].split(':')
+    t[0] = rep_first_value
+    v = ':'.join(t)
+    response_list[0] = v
+    s = response_list[-1].split(':')
+    s[-1] = rep_last_value
+    q = ':'.join(s)
 
-    response_list[0] = response_list[0].split(':')[0] = rep_first_value
-    response_list[-1] = response_list[-1].split(':')[-1] = rep_last_value
+    response_list[-1] = q
+
     return response_list
 
-def get_first_chars_index(first_chars:str):
 
+def get_first_chars_index(first_chars: str):
     '''
     从右边开始查找中括号大括号下标
     :param first_chars:
     :return:
     '''
 
-    key =  first_chars.split(':')[0]
+    key = first_chars.split(':')[0]
     brace_index = key.rfind('{')
     brackets_index = key.rfind('[')
 
-    return {key:max(brace_index,brackets_index) + 1}
+    return {key: max(brace_index, brackets_index) + 1}
 
-def get_last_chars_index(last_chars:str):
+
+def get_last_chars_index(last_chars: str):
     '''
     从左边开始查找查找中括号大括号下标
     :param last_chars:
@@ -460,7 +477,7 @@ def get_last_chars_index(last_chars:str):
 
     if brace_index and brackets_index != -1:
 
-        index = min(brace_index,brackets_index)
+        index = min(brace_index, brackets_index)
 
     elif brackets_index == -1:
 
@@ -470,9 +487,10 @@ def get_last_chars_index(last_chars:str):
 
         index = brackets_index
 
-    return {key:index}
+    return {key: index}
 
-def singleton_assert_value(response_str:str,assert_str:str):
+
+def singleton_assert_value(response_str: str, assert_str: str):
     '''
     截取返回值单个值*****好像过度封装了
     :param response_str:
@@ -481,20 +499,26 @@ def singleton_assert_value(response_str:str,assert_str:str):
     '''
     if rem_special_chars(response_str).split(',').count(rem_special_chars(assert_str)):
 
-        response_value = split_string(response_str)[rem_special_chars(response_str).split(',').index(rem_special_chars(assert_str))]
+        response_value = split_string(response_str)[
+            rem_special_chars(response_str).split(',').index(rem_special_chars(assert_str))]
         response_value_list = response_value.split(':')
-        response_value_list[-1] = iter(get_last_chars_index(split_string(response_value)[0]).keys()).__next__()[:iter(get_last_chars_index(split_string(response_value)[0]).values()).__next__()] + \
-            iter(get_last_chars_index(split_string(assert_str)[0]).keys()).__next__()[iter(get_last_chars_index(split_string(assert_str)[0]).values()).__next__():]
+        response_value_list[-1] = iter(get_last_chars_index(split_string(response_value)[0]).keys()).__next__()[
+                                  :iter(get_last_chars_index(split_string(response_value)[0]).values()).__next__()] + \
+                                  iter(get_last_chars_index(split_string(assert_str)[0]).keys()).__next__()[
+                                  iter(get_last_chars_index(split_string(assert_str)[0]).values()).__next__():]
 
         response_value_list[0] = split_string(assert_str)[0].split(':')[0]
-
-        return ':'.join(response_value_list)
+        r = ':'.join(response_value_list)
+        return split_string(r)
 
     else:
 
-        value = assert_str.replace(' ','')[:assert_str.replace(' ','').rfind(':')][1:]
+        value = assert_str.replace(' ', '')[:assert_str.replace(' ', '').rfind(':')][1:]
 
-        return '{' + response_str.replace(' ','')[response_str.replace(' ','').find(value):][:response_str.replace(' ','')[response_str.replace(' ','').find(value):].find(',')] + '}'
+        return split_string('{' + response_str.replace(' ', '')[response_str.replace(' ', '').find(value):][
+                                  :response_str.replace(' ', '')[response_str.replace(' ', '').find(value):].find(
+                                      ',')] + '}')
+
 
 if __name__ == '__main__':
     s = '{{"userExtInfo":{"userId":2661076'
