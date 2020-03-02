@@ -364,10 +364,8 @@ def interception_response_value(response_str: str, assert_str: str):
 
         return '未找到断言数据'
 
-
 def split_string(string: str):
     return string.replace(' ', '').split(',')
-
 
 def rem_special_chars(string: str):
     '''
@@ -386,7 +384,6 @@ def rem_special_chars(string: str):
     }
 
     return string.translate(remap)
-
 
 def get_interception_index(response_str: str, find_value: str):
     '''
@@ -410,7 +407,6 @@ def get_interception_index(response_str: str, find_value: str):
 
     else:
         return {}
-
 
 def replace_list_chars_structure(response_list: list, assert_value: list):
     '''
@@ -446,7 +442,6 @@ def replace_list_chars_structure(response_list: list, assert_value: list):
 
     return response_list
 
-
 def get_first_chars_index(first_chars: str):
     '''
     从右边开始查找中括号大括号下标
@@ -459,7 +454,6 @@ def get_first_chars_index(first_chars: str):
     brackets_index = key.rfind('[')
 
     return {key: max(brace_index, brackets_index) + 1}
-
 
 def get_last_chars_index(last_chars: str):
     '''
@@ -488,7 +482,6 @@ def get_last_chars_index(last_chars: str):
         index = brackets_index
 
     return {key: index}
-
 
 def singleton_assert_value(response_str: str, assert_str: str):
     '''
