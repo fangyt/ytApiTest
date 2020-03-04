@@ -54,7 +54,7 @@ def save_account_cookies():
 
     return parsingData.save_response_data(requests.post(url=url, data=data))
 
-def get(interface_key,case_key):
+def get(interface_key,case_key,model = None):
 
     url = parsingData.get_interface_url(interface_key)
     params = parsingData.get_interface_request_data(interface_key, case_key)
@@ -70,7 +70,7 @@ def get(interface_key,case_key):
     parsingData.save_response_data(response)
     return response
 
-def post(interface_key,case_key):
+def post(interface_key,case_key,model = None):
 
     url  = parsingData.get_interface_url(interface_key)
     data = parsingData.get_interface_request_data(interface_key, case_key)
