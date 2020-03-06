@@ -51,6 +51,18 @@ class YamlSingleton():
 
 __CONFIG__ = YamlSingleton().yaml_data
 
+
+def update_case_req_data(interface_key=None, assert_key=None,req_data=None):
+    
+    dic = __CONFIG__
+    
+    if dic.__contains__(interface_key) and dic[interface_key].__contains__(assert_key):
+        
+        data = dic[interface_key][assert_key]['req_data']
+        
+        data.update(req_data)
+        
+
 def parser_response(response):
     '''
     解析body 为json数据
@@ -209,7 +221,7 @@ def replace_json_path_value(dic):
 
 
 if __name__ == '__main__':
-    s = YamlSingleton()
-    print(s.yaml_data)
-    print(s.yaml_data)
-    print(s.yaml_data)
+    d ={1:2,3:4}
+    e = {1:3}
+    d.update(e)
+    print(d)
