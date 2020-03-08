@@ -4,7 +4,7 @@
 # Author : fyt
 # File   : apiReq.py
 
-import requests,os
+import requests,os,pysnooper
 from urllib import parse
 from dingtalkchatbot.chatbot import DingtalkChatbot
 
@@ -20,31 +20,30 @@ def get_url_key(url):
 	'''
 	return os.path.split(parse.urlparse(url).path)[-1]
 
-def get_account_cookies():
+@pysnooper.snoop()
+def get_account_cookies(url):
 
-    cookies_key = get_url_key(parsingData.parsing_case_yaml_data(configKey.ACCOUNT_URL))
+    url_key = parsingData.get_host_key(url=url)
+
     json_data = parsingData.parsing_json_data()
 
-    if json_data.__contains__(cookies_key):
+    if json_data.__contains__(url_key):
 
-            json_data =json_data[cookies_key]
-            user_id = json_data['data']['userinfo']['userId']
-            session_id = json_data['data']['sessionId']
+        return json_data[url_key]
 
-            c = 'userId={userId}; sessionId={sessionId}; ' \
-                'SMclient=MicroMessenger; SMmodel=Xiaomi_MI_8;' \
-                ' SMsystem=Android_8.1.0; ' \
-                'SMver=7.0.3; ' \
-                'SMdisplay=393x818; ' \
-                'SDKVersion=2.6.1; ' \
-                'weId=supermonkey-weapp-gear; ' \
-                'version=1.2.0;'.format(userId=user_id,
-                                        sessionId=session_id)
-            h = {
-                'Cookie': c
-            }
+    else:
 
-            return h
+        response = requests.post(url=parsingData.get_interface_url(interface_key=parsingData.get_cookie_key(url_key)),
+                                 data=parsingData.get_interface_request_data(parsingData.get_cookie_key(url_key),case_key=url_key))
+
+        if response.status_code == 200:
+
+            parsingData.save_response_data(response={parsingData.get_host_key(response.url): response.request._cookies})
+
+        else:
+
+            exit(0), print('cookie保存失败', response.text)
+
 
 def save_account_cookies():
 
@@ -54,9 +53,9 @@ def save_account_cookies():
 
     return parsingData.save_response_data(requests.post(url=url, data=data))
 
-def get(interface_key,case_key):
+def get(interface_key,case_key,host_key = None):
 
-    url = parsingData.get_interface_url(interface_key)
+    url = parsingData.get_interface_url(interface_key,host_key=host_key)
     params = parsingData.get_interface_request_data(interface_key, case_key)
 
     response = requests.get(url=url,
@@ -70,24 +69,14 @@ def get(interface_key,case_key):
     parsingData.save_response_data(response)
     return response
 
-def post(interface_key,case_key):
+def post(interface_key,case_key,host_key = None):
 
-    url  = parsingData.get_interface_url(interface_key)
+    url  = parsingData.get_interface_url(interface_key,host_key=host_key)
     data = parsingData.get_interface_request_data(interface_key, case_key)
-
     response = requests.post(url=url,
                              data=data,
-                             headers=get_account_cookies())
-
-    if response.json()['rtn'] == 25 or response.json()['rtn'] == 11:
-
-        save_account_cookies()
-        post(interface_key,case_key)
-
-    else:
-
-        parsingData.save_response_data(response)
-
+                             cookies=get_account_cookies(url))
+    parsingData.save_response_data(response)
     return response
 
 def send_ding_talk_info(title,text):
@@ -106,3 +95,13 @@ def send_ding_talk_info(title,text):
 
     else:
         print('没有找到发送钉钉群URL')
+
+
+if __name__ == '__main__':
+    post('classScheduleJson','search')
+    post('classScheduleJson','search')
+    post('classScheduleJson','search')
+    print(post('classScheduleJson','search').text)
+
+
+

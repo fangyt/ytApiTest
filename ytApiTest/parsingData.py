@@ -7,13 +7,14 @@
 import yaml, json, os, jsonpath, operator, requests
 from ytApiTest.file import create_data_file
 from ytApiTest import configKey, file
-from urllib import parse
+from urllib.parse import urlparse
 
 
 class YamlSingleton():
     _obj = None
     _init_flag = True
     yaml_data = None
+    res_data = dict()
 
     def __new__(cls, *args, **kwargs):
 
@@ -47,9 +48,16 @@ class YamlSingleton():
             print('解析用例数据文件错误，或者找不到', e)
 
     def get_json_data(self):
-        pass
+
+        return self.res_data
+
+    def update_json_data(self, dic: dict):
+
+        self.get_json_data().update(dic)
+
 
 __CONFIG__ = YamlSingleton().yaml_data
+
 
 def parser_response(response):
     '''
@@ -70,6 +78,8 @@ def parsing_json_data():
     解析后台接口返回值
     :return:
     '''
+
+    return YamlSingleton().get_json_data()
     with open(create_data_file(), encoding='utf-8')as json_file:
         data = json.load(json_file)
 
@@ -122,27 +132,33 @@ def save_response_data(response):
     :param response: 后台返回值
     :return:
     '''
-    if response.status_code == 200:
-        json_key = os.path.split(parse.urlparse(response.request.url).path)[-1]
-        json_value = {json_key: parser_response(response)}
-    else:
-        return '无法解析后台返回值', response
 
-    old_json_data = parsing_json_data()
+    json_value = parser_response(response)
 
-    old_json_data.update(json_value)
+    if isinstance(json_value, dict):
+        YamlSingleton().update_json_data(json_value)
 
-    json_data = json.dumps(old_json_data, indent=4)
-
-    try:
-
-        with open(create_data_file(), 'w', encoding='utf-8') as f:
-
-            f.write(json_data)
-
-    except RuntimeError as error:
-
-        print('json数据写入失败', error)
+    # if response.status_code == 200:
+    #     json_key = os.path.split(parse.urlparse(response.request.url).path)[-1]
+    #     json_value = {json_key: parser_response(response)}
+    # else:
+    #     return '无法解析后台返回值', response
+    # YamlSingleton().update_json_data(json_value)
+    # old_json_data = parsing_json_data()
+    #
+    # old_json_data.update(json_value)
+    #
+    # json_data = json.dumps(old_json_data, indent=4)
+    #
+    # try:
+    #
+    #     with open(create_data_file(), 'w', encoding='utf-8') as f:
+    #
+    #         f.write(json_data)
+    #
+    # except RuntimeError as error:
+    #
+    #     print('json数据写入失败', error)
 
 
 def get_interface_request_data(interface_key, case_key):
@@ -156,14 +172,15 @@ def get_interface_request_data(interface_key, case_key):
     return replace_json_path_value(parsing_case_yaml_data(interface_key, case_key, configKey.YAML_KEY().REQ_DATA))
 
 
-def get_interface_url(interface_key):
+def get_interface_url(interface_key, host_key=None):
     '''
     获取接口URL
     :param interface_key: 接口key
     :return:
     '''
-    return parsing_case_yaml_data(configKey.OBJECT_HOST) + parsing_case_yaml_data(interface_key,
-                                                                                  configKey.YAML_KEY().URL)
+    return get_obj_host(host_key=host_key) + \
+           parsing_case_yaml_data(interface_key=interface_key,
+                                  assert_key=configKey.YAML_KEY().URL)
 
 
 def get_interface_case_assert_data(interface_key, case_key):
@@ -207,8 +224,42 @@ def replace_json_path_value(dic):
     return dic
 
 
+def get_obj_host(host_key=None):
+    '''
+    获取项目HOST
+    :param host_key:
+    :return:
+    '''
+    if host_key == None:
+        return iter(__CONFIG__[configKey.OBJECT_HOST].values()).__next__()
+
+    if __CONFIG__[configKey.OBJECT_HOST].__contains__(host_key):
+        return __CONFIG__[configKey.OBJECT_HOST][host_key]
+
+
+def get_host_key(url: str):
+
+    for key, value in parsing_case_yaml_data(configKey.OBJECT_HOST).items():
+        value_netloc = urlparse(value).netloc
+
+        url_netloc = urlparse(url).netloc
+        if value_netloc == url_netloc:
+            return key
+
+
+def get_cookie_key(host_key):
+
+    for key in __CONFIG__.keys():
+
+        if len(__CONFIG__[key].keys()) >= 2:
+
+            for tow_key in __CONFIG__[key].keys():
+
+                if tow_key == host_key:
+
+                    return key
+
+
 if __name__ == '__main__':
-    s = YamlSingleton()
-    print(s.yaml_data)
-    print(s.yaml_data)
-    print(s.yaml_data)
+
+    print(get_cookie_key(get_host_key(get_interface_url('classScheduleJson'))))
