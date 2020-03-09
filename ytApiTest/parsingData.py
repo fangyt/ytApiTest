@@ -19,6 +19,7 @@ class YamlSingleton():
     def __new__(cls, *args, **kwargs):
 
         if YamlSingleton._obj == None:
+
             YamlSingleton._obj = object.__new__(cls)
 
         return cls._obj
@@ -58,6 +59,17 @@ class YamlSingleton():
 
 __CONFIG__ = YamlSingleton().yaml_data
 
+
+def update_case_req_data(interface_key=None, assert_key=None,req_data=None):
+    
+    dic = __CONFIG__
+    
+    if dic.__contains__(interface_key) and dic[interface_key].__contains__(assert_key):
+        
+        data = dic[interface_key][assert_key]['req_data']
+        
+        data.update(req_data)
+        
 
 def parser_response(response):
     '''
@@ -133,32 +145,15 @@ def save_response_data(response):
     :return:
     '''
 
-    json_value = parser_response(response)
+    if response.status_code == 200:
+        json_key = os.path.split(urlparse(response.request.url).path)[-1]
+        json_key = json_key.replace('.','/')
+        json_value = {json_key: parser_response(response)}
+    else:
+        return '无法解析后台返回值', response
 
-    if isinstance(json_value, dict):
-        YamlSingleton().update_json_data(json_value)
+    YamlSingleton().update_json_data(json_value)
 
-    # if response.status_code == 200:
-    #     json_key = os.path.split(parse.urlparse(response.request.url).path)[-1]
-    #     json_value = {json_key: parser_response(response)}
-    # else:
-    #     return '无法解析后台返回值', response
-    # YamlSingleton().update_json_data(json_value)
-    # old_json_data = parsing_json_data()
-    #
-    # old_json_data.update(json_value)
-    #
-    # json_data = json.dumps(old_json_data, indent=4)
-    #
-    # try:
-    #
-    #     with open(create_data_file(), 'w', encoding='utf-8') as f:
-    #
-    #         f.write(json_data)
-    #
-    # except RuntimeError as error:
-    #
-    #     print('json数据写入失败', error)
 
 
 def get_interface_request_data(interface_key, case_key):
@@ -270,6 +265,4 @@ def get_cookie_key(host_key):
 
 
 if __name__ == '__main__':
-    j = get_interface_url(interface_key=get_cookie_key(host_key='CMS_HOST'),host_key='CMS_HOST')
-    k = jsonpath.jsonpath(__CONFIG__,'$..SMR_HOST[]')
-    print(k)
+    pass
