@@ -97,7 +97,7 @@ def parsing_case_yaml_data(interface_key=None, assert_key=None, assert_value_key
     try:
 
         dic = __CONFIG__
-
+        print()
         if interface_key and \
                 assert_key and \
                 assert_value_key:
@@ -172,7 +172,7 @@ def get_interface_request_data(interface_key, case_key):
     return replace_json_path_value(parsing_case_yaml_data(interface_key, case_key, configKey.YAML_KEY().REQ_DATA))
 
 
-def get_interface_url(interface_key, host_key=None):
+def get_interface_url(interface_key=None, host_key=None):
     '''
     获取接口URL
     :param interface_key: 接口key
@@ -240,26 +240,36 @@ def get_obj_host(host_key=None):
 def get_host_key(url: str):
 
     for key, value in parsing_case_yaml_data(configKey.OBJECT_HOST).items():
+
         value_netloc = urlparse(value).netloc
 
         url_netloc = urlparse(url).netloc
+
+
         if value_netloc == url_netloc:
+
             return key
 
 
 def get_cookie_key(host_key):
 
+    # return jsonpath.jsonpath(__CONFIG__,'$..{host_key}'.format(host_key=host_key))[-1]
+
+
     for key in __CONFIG__.keys():
 
-        if len(__CONFIG__[key].keys()) >= 2:
+        for tow_key in __CONFIG__[key]:
 
-            for tow_key in __CONFIG__[key].keys():
+            if tow_key == host_key:
 
-                if tow_key == host_key:
+                if isinstance(__CONFIG__[key][tow_key],dict):
 
                     return key
 
 
-if __name__ == '__main__':
 
-    print(get_cookie_key(get_host_key(get_interface_url('classScheduleJson'))))
+
+if __name__ == '__main__':
+    j = get_interface_url(interface_key=get_cookie_key(host_key='CMS_HOST'),host_key='CMS_HOST')
+    k = jsonpath.jsonpath(__CONFIG__,'$..SMR_HOST[]')
+    print(k)
