@@ -4,8 +4,7 @@
 # Author : fyt
 # File   : parsingData.py
 
-import yaml, json, os, jsonpath, operator, requests
-from ytApiTest.file import create_data_file
+import yaml, os, jsonpath, operator, requests
 from ytApiTest import configKey, file
 from urllib.parse import urlparse
 
@@ -74,7 +73,7 @@ def update_case_req_data(interface_key=None, assert_key=None,req_data=None):
 def parser_response(response):
     '''
     解析body 为json数据
-    :param body:
+    :param response:
     :return:
     '''
     if isinstance(response, requests.Response) and \
@@ -92,24 +91,21 @@ def parsing_json_data():
     '''
 
     return YamlSingleton().get_json_data()
-    with open(create_data_file(), encoding='utf-8')as json_file:
-        data = json.load(json_file)
 
-        return data
 
 
 def parsing_case_yaml_data(interface_key=None, assert_key=None, assert_value_key=None):
     '''
     解析用例数据文件
     :param interface_key: 接口key
-    :param case_key: 断言key
-    :param get_case_key:
+    :param assert_key: 断言key
+    :param assert_value_key:
     :return:
     '''
     try:
 
         dic = __CONFIG__
-        print()
+
         if interface_key and \
                 assert_key and \
                 assert_value_key:
