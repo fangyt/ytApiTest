@@ -40,17 +40,15 @@ def fmt_assert_info(body, assertValue, differenceValue):
         interface_info = url + data
 
         info = 'ErrorInfo: {errorInfo}\n\n' \
-               'InterfaceInfo: {interfaceInfo}\n\n' \
-               'assertValue: {assertValue}'.format(errorInfo=differenceValue,
+               'InterfaceInfo: {interfaceInfo}\n\n'.format(errorInfo=differenceValue,
                                                    interfaceInfo=interface_info,
-                                                   assertValue='')
+                                                   )
 
         apiReq.send_ding_talk_info(title='接口断言失败',
                                    text=info)
         return info
     else:
         return None
-
 
 def assert_url_code(body, assertValue):
     '''
@@ -59,7 +57,6 @@ def assert_url_code(body, assertValue):
     '''
 
     assert operator.eq(body.status_code, assertValue), fmt_assert_info(body, assertValue, '状态码不等于200')
-
 
 def assert_body_include_value(body=None, assertValue=None):
     '''
@@ -86,32 +83,6 @@ def assert_body_include_value(body=None, assertValue=None):
     assert operator.eq(len(assert_difference_info), 0), assert_error_info(
         fmt_assert_info(body, assertValue, error_info))
 
-    # if len(assert_str.split(',')) == 1:
-    #     assert remove_special_characters(body_str).split(',').count(
-    #         remove_special_characters(assert_str).split(',')[0]), fmt_assert_info(body, assertValue, assert_str)
-    #
-    #     return
-    #
-    # matching_value = find_response_assert_value(assert_value=assert_str,
-    #                                             response_value=body_str)
-    # if operator.eq(None, matching_value):
-    #     assert_error_info(fmt_assert_info(body, assertValue, '返回值不包含断言数据'))
-    #     print('找不到断言数据', matching_value)
-    #     return assert_error_info('返回值不包含断言数据')
-    # response_str_set = set(matching_value)
-    # assert_str_set = set(assert_str.replace(' ', '').split(','))
-    # assert_difference_info = list(assert_str_set.difference(response_str_set))
-    # response_difference_info = list(response_str_set.difference(assert_str_set))
-    # response_difference_info.sort()
-    # assert_difference_info.sort()
-    # error_info = {'ASSERT': '{assert_difference_info}'.format(assert_difference_info=assert_difference_info),
-    #               '************': '***********', 'RESPONSE': '{response_difference_info}'.format(
-    #         response_difference_info=response_difference_info)}
-    #
-    # assert operator.eq(len(assert_difference_info), 0), assert_error_info(
-    #     fmt_assert_info(body, assertValue, error_info))
-
-
 def assert_body_ep_value(body=None, assertValue=None):
     '''
     断言body 是否与value完全相等
@@ -135,7 +106,6 @@ def assert_body_ep_value(body=None, assertValue=None):
 
     assert operator.eq(len(assert_difference_info), 0), assert_error_info(
         fmt_assert_info(body, assertValue, error_info))
-
 
 def assert_response_url_status(response):
     '''
@@ -469,7 +439,7 @@ def get_last_chars_index(last_chars: str):
 
     index = None
 
-    if brace_index != -1 and brackets_index != -1:
+    if brace_index and brackets_index != -1:
 
         index = min(brace_index, brackets_index)
 
