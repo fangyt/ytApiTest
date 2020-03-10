@@ -133,3 +133,11 @@
     ytApiTest.assert_response_url_status(response）
     #参数说明：response(接口返回response对象)
 
+
+.. code:: python
+
+    #修改请求参数
+    import ytApiTest
+    #读取.yaml文件内对应的接口值并发送post请求到后台,返回response对象
+    ytApiTest.update_case_req_data(interface_key=None, assert_key=None,req_data=None）
+    参数：interface_key=接口名称, assert_key=断言值,req_data=请求字典
