@@ -469,7 +469,7 @@ def get_last_chars_index(last_chars: str):
 
     index = None
 
-    if brace_index and brackets_index != -1:
+    if brace_index != -1 and brackets_index != -1:
 
         index = min(brace_index, brackets_index)
 
