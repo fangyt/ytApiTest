@@ -91,8 +91,8 @@ def assert_body_ep_value(body=None, assertValue=None):
     if body == None and assertValue == None:
         return
 
-    body_str = remove_special_characters(json.dumps(parsingData.parser_response(body), ensure_ascii=False))
-    assert_str = remove_special_characters(json.dumps(assertValue, ensure_ascii=False))
+    body_str = rem_special_chars(json.dumps(parsingData.parser_response(body), ensure_ascii=False))
+    assert_str = rem_special_chars(json.dumps(assertValue, ensure_ascii=False))
 
     response_str_set = set(body_str.split(','))
     assert_str_set = set(assert_str.split(','))
@@ -120,188 +120,188 @@ def assert_response_url_status(response):
         if rep_value.rfind('https') != -1:
             url = str(rep_value[rep_value.rfind('https'):]).replace("\"", '').replace(',', '')
             requests.packages.urllib3.disable_warnings()
-            body = requests.get(remove_special_characters(url), verify=False)
+            body = requests.get(rem_special_chars(url), verify=False)
             error_info = {url: body.status_code}
             assert operator.eq(body.status_code, 200), fmt_assert_info(differenceValue=error_info,
                                                                        body=response,
                                                                        assertValue=200)
 
 
-def splice_regula_expression(dic):
-    '''
-    生成匹配断言正则表达式
-    :param dic: 断言数据
-    :return:
-    '''
-
-    if isinstance(dic, dict):
-        assert_data_str = remove_special_characters(json.dumps(dic, ensure_ascii=False))
-        ex_star_str = assert_data_str[:assert_data_str.find(':')]
-        ex_end_str = assert_data_str[assert_data_str.rfind(':'):]
-        pattern = ex_star_str + '.*' + ex_end_str
-
-        return pattern
-
-
-def remove_special_characters(string):
-    '''
-    删除特殊字符{,[,],}
-    :param string:
-    :return:
-    '''
-    if isinstance(string, str):
-        return string.replace('{', '').replace('}', '').replace('[', '').replace(']', '').replace(' ', '')
-
-
-def interception_json_assert_value(assert_value_str: str, response_str: str):
-    response_str = response_str[1:-1]
-
-    if assert_value_str.endswith("]}"):
-
-        sta_str = assert_value_str[:assert_value_str.index(':')].replace('{', '')
-        end_str = str(assert_value_str[assert_value_str.rfind(',') + 1:]).replace('}', '')
-
-        if operator.ne(response_str.find(sta_str), -1) and operator.ne(response_str.find(end_str), -1):
-            value = response_str[response_str.index(sta_str):response_str.index(end_str) + len(end_str)]
-
-            return value
-
-    else:
-
-        sta_str = assert_value_str[:assert_value_str.index(':')].replace('{', '')
-        end_str = str(assert_value_str[:assert_value_str.rfind(':') + 1]).replace('}', '')
-        end_str = end_str[end_str.rfind(',') + 1:]
-
-        if operator.ne(response_str.find(sta_str), -1) and operator.ne(response_str.find(end_str), -1):
-            end_str_index = response_str.index(',', response_str.index(end_str))
-            sta_str_index = response_str.index(sta_str)
-
-            return response_str[sta_str_index:end_str_index]
-
-
-def find_response_assert_value(assert_value: str, response_value: str):
-    response_value_list = response_value.translate(response_value.maketrans('{}[]', '    ')).replace(' ', '').split(',')
-
-    assert_value_list = assert_value.translate(response_value.maketrans('{}[]', '    ')).replace(' ', '').split(',')
-
-    start_str = assert_value_list[0]
-    end_str = assert_value_list[-1]
-
-    try:
-
-        if response_value_list.count(start_str) and response_value_list.count(end_str):
-            # 处理头尾都存在情况
-            start_str_index = response_value_list.index(start_str)
-            end_str_index = response_value_list.index(end_str)
-
-            interception_list_response_value = response_value.split(',')[start_str_index:end_str_index + 1]
-            cutting_value = assert_value.split(',')
-            replace_first_value = interception_colon_before_value(cutting_value[0])
-            new_interception_list_response_first_value = interception_list_response_value[0].replace(
-                interception_colon_before_value(interception_list_response_value[0]), replace_first_value)
-            new_interception_list_response_last_value = interception_list_response_value[-1].replace(
-                interception_colon_before_value(interception_list_response_value[-1], True),
-                interception_colon_before_value(cutting_value[-1], True))
-
-            interception_list_response_value[0] = new_interception_list_response_first_value
-            interception_list_response_value[-1] = new_interception_list_response_last_value
-            interception_list_response_value = [v.replace(' ', '') for v in interception_list_response_value]
-            return interception_list_response_value
-
-        elif response_value_list.count(start_str) and not response_value_list.count(end_str):
-            # 处理只有头部匹配情况
-
-            interception_list_response_value = ','.join(
-                response_value.replace(' ', '').split(',')[response_value_list.index(start_str) + 1:])[
-                                               :len(','.join(assert_value.replace(' ', '').split(',')[1:]))].split(',')
-            interception_list_response_value.insert(0, assert_value.split(',')[0])
-
-            if assert_value.split(',')[-1].find(':') != -1:
-                interception_list_response_value[-1] = interception_list_last_special_chars(
-                    assert_value.split(',')[-1].split(':')[-1], interception_list_response_value[-1])
-            else:
-                interception_list_response_value[-1] = interception_list_last_special_chars(assert_value.split(',')[-1],
-                                                                                            interception_list_response_value[
-                                                                                                -1])
-
-            return interception_list_response_value
-
-        elif not response_value_list.count(start_str) and response_value_list.count(end_str):
-            # 处理只有头部匹配情况
-
-            interception_response_value = ','.join(
-                response_value.replace(' ', '').split(',')[:response_value_list.index(end_str)])
-
-            interception_list_response_value = ('{' + interception_response_value[(len(
-                interception_response_value) - len(','.join(assert_value.replace(' ', '').split(',')[:-1]))):]).split(
-                ',')
-
-            interception_list_response_value.insert(len(interception_list_response_value),
-                                                    assert_value.replace(' ', '').split(',')[-1])
-
-            interception_list_response_value[0] = interception_list_first_special_chars(
-                assert_first_value=assert_value.split(',')[0],
-                response_first_value=interception_list_response_value[0])
-            interception_list_response_value = [v.replace(' ', '') for v in interception_list_response_value]
-            return interception_list_response_value
-
-    except ValueError as e:
-        print(e)
-
-
-def interception_list_last_special_chars(assert_last_value: str, response_lase_value: str):
-    one_index = assert_last_value.find('}')
-    two_index = assert_last_value.find(']')
-
-    if one_index != -1 and two_index != -1:
-
-        value = assert_last_value[one_index if one_index < two_index else two_index:]
-        response_lase_value = response_lase_value.translate(response_lase_value.maketrans('{}[]', '    ')).replace(' ',
-                                                                                                                   '')
-
-        return response_lase_value.translate(response_lase_value.maketrans('{}[]', '    ')).replace(' ', '') + value
-
-    elif one_index == -1:
-
-        value = assert_last_value[two_index:]
-
-        return response_lase_value.translate(response_lase_value.maketrans('{}[]', '    ')).replace(' ', '') + value
-
-    elif two_index == -1:
-
-        value = assert_last_value[one_index:]
-
-        return response_lase_value.translate(response_lase_value.maketrans('{}[]', '    ')).replace(' ', '') + value
-
-
-def special_last_chars_index(chars: str):
-    split_value = chars.split(':')[1]
-    one_index = split_value.find('}')
-    two_index = split_value.find(']')
-    index = one_index if one_index > two_index else two_index
-
-    return index - 1
-
-
-def interception_list_first_special_chars(assert_first_value: str, response_first_value: str):
-    return assert_first_value[:special_chars_index(assert_first_value)] + response_first_value[
-                                                                          special_chars_index(response_first_value):]
+# def splice_regula_expression(dic):
+#     '''
+#     生成匹配断言正则表达式
+#     :param dic: 断言数据
+#     :return:
+#     '''
+#
+#     if isinstance(dic, dict):
+#         assert_data_str = remove_special_characters(json.dumps(dic, ensure_ascii=False))
+#         ex_star_str = assert_data_str[:assert_data_str.find(':')]
+#         ex_end_str = assert_data_str[assert_data_str.rfind(':'):]
+#         pattern = ex_star_str + '.*' + ex_end_str
+#
+#         return pattern
+#
+#
+# def remove_special_characters(string):
+#     '''
+#     删除特殊字符{,[,],}
+#     :param string:
+#     :return:
+#     '''
+#     if isinstance(string, str):
+#         return string.replace('{', '').replace('}', '').replace('[', '').replace(']', '').replace(' ', '')
+#
+#
+# def interception_json_assert_value(assert_value_str: str, response_str: str):
+#     response_str = response_str[1:-1]
+#
+#     if assert_value_str.endswith("]}"):
+#
+#         sta_str = assert_value_str[:assert_value_str.index(':')].replace('{', '')
+#         end_str = str(assert_value_str[assert_value_str.rfind(',') + 1:]).replace('}', '')
+#
+#         if operator.ne(response_str.find(sta_str), -1) and operator.ne(response_str.find(end_str), -1):
+#             value = response_str[response_str.index(sta_str):response_str.index(end_str) + len(end_str)]
+#
+#             return value
+#
+#     else:
+#
+#         sta_str = assert_value_str[:assert_value_str.index(':')].replace('{', '')
+#         end_str = str(assert_value_str[:assert_value_str.rfind(':') + 1]).replace('}', '')
+#         end_str = end_str[end_str.rfind(',') + 1:]
+#
+#         if operator.ne(response_str.find(sta_str), -1) and operator.ne(response_str.find(end_str), -1):
+#             end_str_index = response_str.index(',', response_str.index(end_str))
+#             sta_str_index = response_str.index(sta_str)
+#
+#             return response_str[sta_str_index:end_str_index]
+#
+#
+# def find_response_assert_value(assert_value: str, response_value: str):
+#     response_value_list = response_value.translate(response_value.maketrans('{}[]', '    ')).replace(' ', '').split(',')
+#
+#     assert_value_list = assert_value.translate(response_value.maketrans('{}[]', '    ')).replace(' ', '').split(',')
+#
+#     start_str = assert_value_list[0]
+#     end_str = assert_value_list[-1]
+#
+#     try:
+#
+#         if response_value_list.count(start_str) and response_value_list.count(end_str):
+#             # 处理头尾都存在情况
+#             start_str_index = response_value_list.index(start_str)
+#             end_str_index = response_value_list.index(end_str)
+#
+#             interception_list_response_value = response_value.split(',')[start_str_index:end_str_index + 1]
+#             cutting_value = assert_value.split(',')
+#             replace_first_value = interception_colon_before_value(cutting_value[0])
+#             new_interception_list_response_first_value = interception_list_response_value[0].replace(
+#                 interception_colon_before_value(interception_list_response_value[0]), replace_first_value)
+#             new_interception_list_response_last_value = interception_list_response_value[-1].replace(
+#                 interception_colon_before_value(interception_list_response_value[-1], True),
+#                 interception_colon_before_value(cutting_value[-1], True))
+#
+#             interception_list_response_value[0] = new_interception_list_response_first_value
+#             interception_list_response_value[-1] = new_interception_list_response_last_value
+#             interception_list_response_value = [v.replace(' ', '') for v in interception_list_response_value]
+#             return interception_list_response_value
+#
+#         elif response_value_list.count(start_str) and not response_value_list.count(end_str):
+#             # 处理只有头部匹配情况
+#
+#             interception_list_response_value = ','.join(
+#                 response_value.replace(' ', '').split(',')[response_value_list.index(start_str) + 1:])[
+#                                                :len(','.join(assert_value.replace(' ', '').split(',')[1:]))].split(',')
+#             interception_list_response_value.insert(0, assert_value.split(',')[0])
+#
+#             if assert_value.split(',')[-1].find(':') != -1:
+#                 interception_list_response_value[-1] = interception_list_last_special_chars(
+#                     assert_value.split(',')[-1].split(':')[-1], interception_list_response_value[-1])
+#             else:
+#                 interception_list_response_value[-1] = interception_list_last_special_chars(assert_value.split(',')[-1],
+#                                                                                             interception_list_response_value[
+#                                                                                                 -1])
+#
+#             return interception_list_response_value
+#
+#         elif not response_value_list.count(start_str) and response_value_list.count(end_str):
+#             # 处理只有头部匹配情况
+#
+#             interception_response_value = ','.join(
+#                 response_value.replace(' ', '').split(',')[:response_value_list.index(end_str)])
+#
+#             interception_list_response_value = ('{' + interception_response_value[(len(
+#                 interception_response_value) - len(','.join(assert_value.replace(' ', '').split(',')[:-1]))):]).split(
+#                 ',')
+#
+#             interception_list_response_value.insert(len(interception_list_response_value),
+#                                                     assert_value.replace(' ', '').split(',')[-1])
+#
+#             interception_list_response_value[0] = interception_list_first_special_chars(
+#                 assert_first_value=assert_value.split(',')[0],
+#                 response_first_value=interception_list_response_value[0])
+#             interception_list_response_value = [v.replace(' ', '') for v in interception_list_response_value]
+#             return interception_list_response_value
+#
+#     except ValueError as e:
+#         print(e)
+#
+#
+# def interception_list_last_special_chars(assert_last_value: str, response_lase_value: str):
+#     one_index = assert_last_value.find('}')
+#     two_index = assert_last_value.find(']')
+#
+#     if one_index != -1 and two_index != -1:
+#
+#         value = assert_last_value[one_index if one_index < two_index else two_index:]
+#         response_lase_value = response_lase_value.translate(response_lase_value.maketrans('{}[]', '    ')).replace(' ',
+#                                                                                                                    '')
+#
+#         return response_lase_value.translate(response_lase_value.maketrans('{}[]', '    ')).replace(' ', '') + value
+#
+#     elif one_index == -1:
+#
+#         value = assert_last_value[two_index:]
+#
+#         return response_lase_value.translate(response_lase_value.maketrans('{}[]', '    ')).replace(' ', '') + value
+#
+#     elif two_index == -1:
+#
+#         value = assert_last_value[one_index:]
+#
+#         return response_lase_value.translate(response_lase_value.maketrans('{}[]', '    ')).replace(' ', '') + value
+#
+#
+# def special_last_chars_index(chars: str):
+#     split_value = chars.split(':')[1]
+#     one_index = split_value.find('}')
+#     two_index = split_value.find(']')
+#     index = one_index if one_index > two_index else two_index
+#
+#     return index - 1
 
 
-def special_chars_index(chars: str):
-    split_value = chars.split(':')[0]
-    one_index = split_value.rfind('{')
-    two_index = split_value.rfind('[')
-    index = one_index if one_index > two_index else two_index
-
-    return index + 1
-
-
-def interception_colon_before_value(interception_value: str, is_last=False):
-    if is_last:
-        return interception_value[interception_value.rfind(':'):]
-
-    return interception_value[:interception_value.rfind(':')]
+# def interception_list_first_special_chars(assert_first_value: str, response_first_value: str):
+#     return assert_first_value[:special_chars_index(assert_first_value)] + response_first_value[
+#                                                                           special_chars_index(response_first_value):]
+#
+#
+# def special_chars_index(chars: str):
+#     split_value = chars.split(':')[0]
+#     one_index = split_value.rfind('{')
+#     two_index = split_value.rfind('[')
+#     index = one_index if one_index > two_index else two_index
+#
+#     return index + 1
+#
+#
+# def interception_colon_before_value(interception_value: str, is_last=False):
+#     if is_last:
+#         return interception_value[interception_value.rfind(':'):]
+#
+#     return interception_value[:interception_value.rfind(':')]
 
 
 # ------------优化方法---------------
@@ -349,7 +349,9 @@ def rem_special_chars(string: str):
         ord("["): None,
         ord("}"): None,
         ord(']'): None,
-        ord(' '): None
+        ord(' '): None,
+        ord('\"'): None,
+        ord("\'"): None
 
     }
 
@@ -366,17 +368,29 @@ def get_interception_index(response_str: str, find_value: str):
 
     find_value_first = find_value_li[0]
     find_value_last = find_value_li[-1]
-
+    first_index = -1
+    last_index = -1
     if rep_li.count(find_value_first):
-
-        return {'first_index': rep_li.index(find_value_first)}
-
+    
+        first_index = rep_li.index(find_value_first)
+        
     elif rep_li.count(find_value_last):
+    
+        last_index = rep_li.index(find_value_last)
+        
+    if first_index != -1 and last_index != -1:
+        
+        return {'first_index':first_index,
+                'last_index':last_index}
+    
+    elif first_index != -1:
+        
+        return {'first_index': first_index}
+    
+    elif last_index != -1:
+        
+        return {'last_index': last_index}
 
-        return {'last_index': rep_li.index(find_value_last)}
-
-    else:
-        return {}
 
 def replace_list_chars_structure(response_list: list, assert_value: list):
     '''
@@ -394,11 +408,18 @@ def replace_list_chars_structure(response_list: list, assert_value: list):
 
     rep_first_value = assert_first_value + iter(get_first_chars_index(response_list[0]).keys()).__next__()[
                                            iter(get_first_chars_index(response_list[0]).values()).__next__():]
-    rep_last_value = iter(get_last_chars_index(response_list[-1]).keys()).__next__()[
-                     :iter(get_last_chars_index(response_list[-1]).values()).__next__()] + assert_last_value
-
+    
     if iter(get_last_chars_index(response_list[-1]).values()).__next__() == -1:
-        rep_last_value = iter(get_last_chars_index(response_list[-1]).keys()).__next__() + rep_last_value
+
+        rep_last_value = iter(get_last_chars_index(response_list[-1]).keys()).__next__() + assert_last_value
+
+    else:
+
+        rep_last_value = iter(get_last_chars_index(response_list[-1]).keys()).__next__()[
+                         :iter(get_last_chars_index(response_list[-1]).values()).__next__()] + assert_last_value
+    
+    # if iter(get_last_chars_index(response_list[-1]).values()).__next__() == -1:
+    #     rep_last_value = iter(get_last_chars_index(response_list[-1]).keys()).__next__() + rep_last_value
 
     t = response_list[0].split(':')
     t[0] = rep_first_value
@@ -437,9 +458,7 @@ def get_last_chars_index(last_chars: str):
     brace_index = key.find('}')
     brackets_index = key.find(']')
 
-    index = None
-
-    if brace_index and brackets_index != -1:
+    if brace_index != -1 and brackets_index != -1:
 
         index = min(brace_index, brackets_index)
 
@@ -482,8 +501,7 @@ def singleton_assert_value(response_str: str, assert_str: str):
                                   :response_str.replace(' ', '')[response_str.replace(' ', '').find(value):].find(
                                       ',')] + '}')
 
-
 if __name__ == '__main__':
     s = '{{"userExtInfo":{"userId":2661076'
     a = '{"userExtInfo":{"userId":2661076'
-    print(interception_list_first_special_chars(s, a))
+    # print(interception_list_first_special_chars(s, a))

@@ -137,6 +137,10 @@ def save_response_data(response):
     :return:
     '''
     
+    if isinstance(response,dict):
+        YamlSingleton().update_json_data(response)
+        return
+    
     if response.status_code == 200:
         json_key = os.path.split(urlparse(response.request.url).path)[-1]
         json_key = json_key.replace('.', '/')
@@ -201,11 +205,15 @@ def replace_json_path_value(dic):
         
         for key, value in dic.items():
             
-            if operator.ne(value, str):
-                value = str(value)
+            if isinstance(value,str):
             
-            if operator.ne(value.find('$'), -1):
-                dic[key] = jsonpath.jsonpath(response_data, value)[0]
+                if operator.ne(value.find('$'), -1):
+                    
+                    json_value = jsonpath.jsonpath(response_data, value)[0]
+                    
+                    if json_value:
+                        
+                        dic[key]
     
     return dic
 
