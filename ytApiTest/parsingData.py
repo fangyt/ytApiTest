@@ -138,15 +138,17 @@ def save_response_data(response):
     '''
     
     if isinstance(response,dict):
-        YamlSingleton().update_json_data(response)
-        return
-    
-    if response.status_code == 200:
-        json_key = os.path.split(urlparse(response.request.url).path)[-1]
-        json_key = json_key.replace('.', '/')
-        json_value = {json_key: parser_response(response)}
+
+        json_value = response
+
     else:
-        return '无法解析后台返回值', response
+    
+        if response.status_code == 200:
+            json_key = os.path.split(urlparse(response.request.url).path)[-1]
+            json_key = json_key.replace('.', '/')
+            json_value = {json_key: parser_response(response)}
+        else:
+            return '无法解析后台返回值', response
     
     YamlSingleton().update_json_data(json_value)
 
