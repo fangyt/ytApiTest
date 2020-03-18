@@ -170,6 +170,15 @@ def get_interface_url(interface_key=None, host_key=None):
     :param interface_key: 接口key
     :return:
     '''
+    
+    if parsing_case_yaml_data(interface_key=interface_key,
+                                  assert_key=configKey.YAML_KEY().URL).find('http') != -1:
+       
+       return parsing_case_yaml_data(interface_key=interface_key,
+                                  assert_key=configKey.YAML_KEY().URL)
+    
+    
+    
     return get_obj_host(host_key=host_key) + \
            parsing_case_yaml_data(interface_key=interface_key,
                                   assert_key=configKey.YAML_KEY().URL)
@@ -211,11 +220,11 @@ def replace_json_path_value(dic):
             
                 if operator.ne(value.find('$'), -1):
                     
-                    json_value = jsonpath.jsonpath(response_data, value)[0]
+                    json_value = jsonpath.jsonpath(response_data, value)
                     
                     if json_value:
                         
-                        dic[key]
+                        dic[key] = json_value[0]
     
     return dic
 
@@ -268,4 +277,7 @@ def get_cookie_key(host_key):
 
 
 if __name__ == '__main__':
-    pass
+    t = YamlSingleton()
+    d = {"3":"l"}
+    t.update_json_data(d)
+    print(t.get_json_data())

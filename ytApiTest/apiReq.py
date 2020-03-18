@@ -30,7 +30,10 @@ def get_account_cookies(url):
 
     else:
         url = parsingData.get_interface_url(interface_key=parsingData.get_cookie_key(host_key=url_key),
-                                            host_key=url_key)
+                                           host_key=url_key)
+        
+        print('不要打脸')
+        
         data = parsingData.get_interface_request_data(parsingData.get_cookie_key(url_key),
                                                                              case_key=url_key)
         response = requests.post(url=url,
@@ -53,13 +56,13 @@ def get_account_cookies(url):
                                sessionId=response.json()['data']['sessionId']),
                            'Content-Length': '0'
                            }
-
-            parsingData.save_response_data(response={url_key: headers})
+            
+                parsingData.save_response_data(response={url_key: headers})
 
             return headers
 
         else:
-
+            print('-----')
             exit(0), print('headers保存失败', response.text)
 
 
@@ -123,4 +126,9 @@ def send_ding_talk_info(title, text):
 
 
 if __name__ == '__main__':
-   pass
+   # url = parsingData.get_interface_url('res_login')
+   # get_account_cookies(url)
+   print(post('getInitInfo','assert_user_info').text)
+   print(post('getInitInfo','assert_user_info').text)
+
+   # print(post('getInitInfo','assert_user_info'))
