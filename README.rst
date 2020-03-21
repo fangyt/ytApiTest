@@ -34,11 +34,6 @@
     项目host
     OBJECT_HOST: https://object/host
 
-    账号host
-    ACCOUNT_URL: https://account_host/user/login2
-
-    登录账号请求用户名密码
-    ACCOUNT_DATA: 账号登录请求参数
 
     interface_name(你接口名称,可自己命名):
                                 url(接口路径,此关键字必须包含): 值可为空
@@ -46,6 +41,7 @@
                                                     des(此关键字必须包含): 用例说明，值可为空,用于断言错误时展示
                                                     req_data(此关键字必须包含): 接口请求参数,值可为空
                                                     ast_data(此关键字必须包含): 接口断言值,值可为空
+                                                    json_expr(此关键值必须包含): 返回查找路径,值可为空
 
 - .yaml文件内使用JSONPATH语法示例
 
@@ -113,16 +109,8 @@
     #执行相等断言方法
     import ytApiTest
     #读取.yaml文件内对应的接口值并发送post请求到后台,返回response对象
-    ytApiTest.assert_body_ep_value(response,assert_value)
-    #参数说明：response(接口返回response对象),assert_value(.yaml文件内断言值)
-
-.. code:: python
-
-    #执行包含断言方法
-    import ytApiTest
-    #读取.yaml文件内对应的接口值并发送post请求到后台,返回response对象
-    ytApiTest.assert_body_include_value(response,assert_value)
-    #参数说明：response(接口返回response对象),assert_value(.yaml文件内断言值)
+    ytApiTest.assert_body_eq_assert_value(response,assert_value,json_expr)
+    #参数说明：response(接口返回response对象),assert_value(.yaml文件内断言值),json_expr(.yaml文件内json_expr值)
 
 
 .. code:: python
@@ -139,5 +127,5 @@
     #修改请求参数
     import ytApiTest
     #读取.yaml文件内对应的接口值并发送post请求到后台,返回response对象
-    ytApiTest.update_case_req_data(interface_key=None, assert_key=None,req_data=None）
+    ytApiTest.update_case_req_data(interface_key=None, assert_key=None,new_request_data=None）
     参数：interface_key=接口名称, assert_key=断言值,req_data=请求字典
