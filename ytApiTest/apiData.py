@@ -20,7 +20,10 @@ class YAML_CONFIG_KEY():
 class FindFile():
 
     def get_yaml_path(self):
-
+        '''
+        查找数据文件
+        :return:
+        '''
         for dirpath, dirnames, filenames in os.walk('./'):
 
             if len(filenames):
@@ -286,7 +289,18 @@ class ParsingData():
         :param dic:
         :return:
         '''
-        YamlSingleton().update_response_data(response=self.parse_response_data(response_data=response))
+        if isinstance(response, dict):
+    
+            json_value = response
+
+        else:
+    
+            if response.status_code == 200:
+                json_key = os.path.split(urlparse(response.request.url).path)[-1]
+                json_key = json_key.replace('.', '/')
+                json_value = {json_key: self.parse_response_data(response_data=response)}
+
+        YamlSingleton().update_response_data(response=json_value)
     
     def parse_response_data(self,response_data:requests.Response):
         '''

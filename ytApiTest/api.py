@@ -104,6 +104,18 @@ def assert_body_eq_assert_value(response_data, assert_value, json_expr):
 	                                              assert_value=assert_value,
 	                                              json_expr=json_expr)
 	
+def assert_body_include_value(response_data, assert_value, json_expr):
+	'''
+	判断是否包含
+	:param response_data: 接口返回数据
+	:param assert_value: 断言数据
+	:param json_expr: jsonpath路径
+	:return:
+	'''
+	
+	InterFaceAssert().assert_body_include_value(response_data=response_data,
+	                                            assert_value=assert_value,
+	                                            json_expr=json_expr)
 
 def assert_response_url_status(response):
     '''

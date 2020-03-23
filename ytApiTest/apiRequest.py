@@ -28,7 +28,7 @@ class InterFaceReq():
 			return response_data[cookie_key]
 		
 		interface_name = self.parsing_data.get_interface_url_interface_name(host_key=cookie_key)
-		login_url = self.parsing_data.get_interface_url(interface_name=interface_name)
+		login_url = self.parsing_data.get_interface_url(interface_name=interface_name,host_key=cookie_key)
 		requests_data = self.parsing_data.get_interface_request_data(interface_name=interface_name,
 		                                                             assert_name=cookie_key)
 				
@@ -99,7 +99,8 @@ class InterFaceReq():
 		:param error_info:
 		:return:
 		'''
-		DingtalkChatbot(self.parsing_data.get_send_error_info_url()).send_markdown(error_info)
+		print(self.parsing_data.get_send_error_info_url())
+		DingtalkChatbot(self.parsing_data.get_send_error_info_url()).send_text(error_info)
 		
 		
 		
