@@ -282,24 +282,28 @@ class ParsingData():
         
         
         return request_data
-        
-    def save_response_data(self,response:requests.Response):
+
+    def save_response_data(self, response: requests.Response):
         '''
         保存接口返回值
         :param dic:
         :return:
         '''
+    
         if isinstance(response, dict):
-    
+        
             json_value = response
-
-        else:
     
-            if response.status_code == 200:
-                json_key = os.path.split(urlparse(response.request.url).path)[-1]
-                json_key = json_key.replace('.', '/')
-                json_value = {json_key: self.parse_response_data(response_data=response)}
-
+        elif response.status_code == 200:
+            json_key = os.path.split(urlparse(response.request.url).path)[-1]
+            json_key = json_key.replace('.', '/')
+            json_value = {json_key: self.parse_response_data(response_data=response)}
+    
+        else:
+        
+            raise ValueError('接口返回值解析错误{}'.format({response.url: response.status_code}))
+            return
+    
         YamlSingleton().update_response_data(response=json_value)
     
     def parse_response_data(self,response_data:requests.Response):

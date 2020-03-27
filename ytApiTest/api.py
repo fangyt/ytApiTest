@@ -93,7 +93,7 @@ def update_interface_request_data(interface_name, assert_name, new_request_data:
 	                                                 new_request_data=new_request_data)
 
 
-def assert_body_eq_assert_value(response_data, assert_value, json_expr):
+def assert_body_eq_assert_value(response_data, assert_value, json_expr=None):
 	'''
 	断言
 	:param response_data: 接口返回值
@@ -104,7 +104,7 @@ def assert_body_eq_assert_value(response_data, assert_value, json_expr):
 	                                              assert_value=assert_value,
 	                                              json_expr=json_expr)
 	
-def assert_body_include_value(response_data, assert_value, json_expr):
+def assert_body_include_value(response_data, assert_value, json_expr=None):
 	'''
 	判断是否包含
 	:param response_data: 接口返回数据

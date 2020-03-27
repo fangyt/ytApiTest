@@ -9,31 +9,38 @@ import requests
 from ytApiTest.apiData import ParsingData
 from dingtalkchatbot.chatbot import DingtalkChatbot
 
+
 class InterFaceReq():
 	
 	def __init__(self):
 		
 		self.parsing_data = ParsingData()
 	
-	def get_interface_cookie(self,url:str):
+	def get_interface_cookie(self, url: str, host_key=None):
+		
 		'''
 		获取并保存接口cookis
 		:param url: 完整接口url
 		:return:
 		'''
-		cookie_key = self.parsing_data.get_interface_url_host_key(url=url)
+		if host_key != None:
+			
+			cookie_key = host_key
+		else:
+			
+			cookie_key = self.parsing_data.get_interface_url_host_key(url=url)
+		
 		response_data = self.parsing_data.get_interface_response_data()
 		if response_data.__contains__(cookie_key):
-			
 			return response_data[cookie_key]
 		
 		interface_name = self.parsing_data.get_interface_url_interface_name(host_key=cookie_key)
-		login_url = self.parsing_data.get_interface_url(interface_name=interface_name,host_key=cookie_key)
+		login_url = self.parsing_data.get_interface_url(interface_name=interface_name, host_key=cookie_key)
 		requests_data = self.parsing_data.get_interface_request_data(interface_name=interface_name,
 		                                                             assert_name=cookie_key)
-				
+		
 		response = requests.post(url=login_url,
-		                              data=requests_data)
+		                         data=requests_data)
 		
 		if response.status_code == 200:
 			
@@ -50,12 +57,12 @@ class InterFaceReq():
 					           sessionId=response.json()['data']['sessionId']),
 				           'Content-Length': '0'
 				           }
-						
+			
 			self.parsing_data.save_response_data(response={cookie_key: headers})
 			
 			return headers
-		
-	def get(self,interface_name,assert_name,host_key=None):
+	
+	def get(self, interface_name, assert_name, host_key=None):
 		'''
 		get 请求
 		:param interface_name: 接口名称
@@ -66,9 +73,11 @@ class InterFaceReq():
 		url = self.parsing_data.get_interface_url(interface_name=interface_name, host_key=host_key)
 		params = self.parsing_data.get_interface_request_data(interface_name=interface_name, assert_name=assert_name)
 		
+		headers = self.get_interface_cookie(url=url, host_key=host_key)
+		
 		response = requests.get(url=url,
 		                        params=params,
-		                        headers=self.get_interface_cookie(url=url))
+		                        headers=headers)
 		
 		self.parsing_data.save_response_data(response)
 		
@@ -85,27 +94,31 @@ class InterFaceReq():
 		url = self.parsing_data.get_interface_url(interface_name=interface_name, host_key=host_key)
 		params = self.parsing_data.get_interface_request_data(interface_name=interface_name, assert_name=assert_name)
 		
+		headers = self.get_interface_cookie(url=url, host_key=host_key)
+		
+		requests.packages.urllib3.disable_warnings()
+		
 		response = requests.post(url=url,
-		                        params=params,
-		                        headers=self.get_interface_cookie(url=url))
+		                         data=params,
+		                         headers=headers,
+		                         verify=False)
 		
 		self.parsing_data.save_response_data(response)
 		
 		return response
 	
-	def send_case_error_info(self,error_info):
+	def send_case_error_info(self, error_info):
 		'''
 		发送错误消息到钉钉群
 		:param error_info:
 		:return:
 		'''
-		print(self.parsing_data.get_send_error_info_url())
 		DingtalkChatbot(self.parsing_data.get_send_error_info_url()).send_text(error_info)
 		
-		
-		
+		return error_info
+
+
 if __name__ == '__main__':
-    v = InterFaceReq().post(interface_name='getInitInfo',
-                              assert_name='assert_user_info').text
-    print(v)
-    
+	v = InterFaceReq().post(interface_name='getInitInfo',
+	                        assert_name='assert_user_info').text
+	print(v)

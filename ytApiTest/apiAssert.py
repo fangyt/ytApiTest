@@ -75,6 +75,7 @@ class InterFaceAssert():
 				error_info = 'response={response} \n\n assert={assert}'.format_map(
 					{'response': find_value,
 					 'assert': value})
+				
 				assert operator.ne(find_value.count(value),0),apiRequest.InterFaceReq().send_case_error_info(error_info)
 				
 	
@@ -154,7 +155,7 @@ class InterFaceAssert():
 				requests.packages.urllib3.disable_warnings()
 				body = requests.get(self.rem_special_chars(url), verify=False)
 				error_info = {url: body.status_code}
-				assert operator.eq(body.status_code, 200), apiRequest.InterFaceReq().send_case_error_info('状态码错误{error_info}'.format_map(error_info))
+				assert operator.eq(body.status_code, 200), apiRequest.InterFaceReq().send_case_error_info('状态码错误{error_info}'.format(error_info=error_info))
 	
 	def rem_special_chars(self, string: str):
 		'''
