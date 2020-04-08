@@ -17,7 +17,6 @@ class InterFaceReq():
 		self.parsing_data = ParsingData()
 	
 	def get_interface_cookie(self, url: str, host_key=None):
-		
 		'''
 		获取并保存接口cookis
 		:param url: 完整接口url
@@ -38,7 +37,6 @@ class InterFaceReq():
 		login_url = self.parsing_data.get_interface_url(interface_name=interface_name, host_key=cookie_key)
 		requests_data = self.parsing_data.get_interface_request_data(interface_name=interface_name,
 		                                                             assert_name=cookie_key)
-		
 		response = requests.post(url=login_url,
 		                         data=requests_data)
 		
@@ -78,7 +76,6 @@ class InterFaceReq():
 		response = requests.get(url=url,
 		                        params=params,
 		                        headers=headers)
-		
 		self.parsing_data.save_response_data(response)
 		
 		return response
@@ -91,18 +88,16 @@ class InterFaceReq():
 		:param host_key: 拼接URL host名称
 		:return:
 		'''
+		
 		url = self.parsing_data.get_interface_url(interface_name=interface_name, host_key=host_key)
 		params = self.parsing_data.get_interface_request_data(interface_name=interface_name, assert_name=assert_name)
-		
 		headers = self.get_interface_cookie(url=url, host_key=host_key)
-		
 		requests.packages.urllib3.disable_warnings()
 		
 		response = requests.post(url=url,
 		                         data=params,
 		                         headers=headers,
 		                         verify=False)
-		
 		self.parsing_data.save_response_data(response)
 		
 		return response
@@ -119,6 +114,4 @@ class InterFaceReq():
 
 
 if __name__ == '__main__':
-	v = InterFaceReq().post(interface_name='getInitInfo',
-	                        assert_name='assert_user_info').text
-	print(v)
+	pass

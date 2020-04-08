@@ -10,19 +10,20 @@ from ytApiTest.apiRequest import InterFaceReq
 from ytApiTest.apiAssert import InterFaceAssert
 from ytApiTest.apiData import ParsingData
 
-def get(interface_name,assert_name,host_key=None):
-	
+
+def get(interface_name, assert_name, host_key=None):
 	return InterFaceReq().get(interface_name=interface_name,
-	                        assert_name=assert_name,
+	                          assert_name=assert_name,
 	                          host_key=host_key)
 
-def post(interface_name,assert_name,host_key=None):
-	
+
+def post(interface_name, assert_name, host_key=None):
 	return InterFaceReq().post(interface_name=interface_name,
-	                         assert_name=assert_name,
+	                           assert_name=assert_name,
 	                           host_key=host_key)
 
-def get_interface_url(interface_name:str,host_key:str = None):
+
+def get_interface_url(interface_name: str, host_key: str = None):
 	'''
 	获取接口URL路径
 	:param interface_name: 接口名称
@@ -30,7 +31,7 @@ def get_interface_url(interface_name:str,host_key:str = None):
 	:return:
 	'''
 	return ParsingData().get_interface_url(interface_name=interface_name,
-	                                     host_key=host_key)
+	                                       host_key=host_key)
 
 
 def get_interface_request_data(interface_name, assert_name):
@@ -41,7 +42,7 @@ def get_interface_request_data(interface_name, assert_name):
 	:return:
 	'''
 	return ParsingData().get_interface_request_data(interface_name=interface_name,
-	                                              assert_name=assert_name)
+	                                                assert_name=assert_name)
 
 
 def get_interface_case_assert_data(interface_name, assert_name):
@@ -52,7 +53,7 @@ def get_interface_case_assert_data(interface_name, assert_name):
 	:return:
 	'''
 	return ParsingData().get_interface_assert_value(interface_name=interface_name,
-	                                              assert_name=assert_name)
+	                                                assert_name=assert_name)
 
 
 def get_interface_json_path(interface_name, assert_name):
@@ -64,7 +65,7 @@ def get_interface_json_path(interface_name, assert_name):
 	'''
 	
 	return ParsingData().get_interface_json_path(interface_name=interface_name,
-	                                           assert_name=assert_name)
+	                                             assert_name=assert_name)
 
 
 def update_interface_json_path(interface_name, assert_name, new_value: dict):
@@ -76,8 +77,8 @@ def update_interface_json_path(interface_name, assert_name, new_value: dict):
 	:return:
 	'''
 	return ParsingData().update_interface_json_path(interface_name=interface_name,
-	                                              assert_name=assert_name,
-	                                              new_value=new_value)
+	                                                assert_name=assert_name,
+	                                                new_value=new_value)
 
 
 def update_interface_request_data(interface_name, assert_name, new_request_data: dict):
@@ -89,8 +90,8 @@ def update_interface_request_data(interface_name, assert_name, new_request_data:
 	'''
 	
 	return ParsingData().update_interface_request_data(interface_name=interface_name,
-	                                                 assert_name=assert_name,
-	                                                 new_request_data=new_request_data)
+	                                                   assert_name=assert_name,
+	                                                   new_request_data=new_request_data)
 
 
 def assert_body_eq_assert_value(response_data, assert_value, json_expr=None):
@@ -103,7 +104,8 @@ def assert_body_eq_assert_value(response_data, assert_value, json_expr=None):
 	InterFaceAssert().assert_body_eq_assert_value(response_data=response_data,
 	                                              assert_value=assert_value,
 	                                              json_expr=json_expr)
-	
+
+
 def assert_body_include_value(response_data, assert_value, json_expr=None):
 	'''
 	判断是否包含
@@ -117,10 +119,11 @@ def assert_body_include_value(response_data, assert_value, json_expr=None):
 	                                            assert_value=assert_value,
 	                                            json_expr=json_expr)
 
+
 def assert_response_url_status(response):
-    '''
+	'''
 	断言返回值中所有URL是否可以正常访问
 	:param response: 后台返回值
 	:return:
 	'''
-    InterFaceAssert().assert_response_url_status(response=response)
+	InterFaceAssert().assert_response_url_status(response=response)

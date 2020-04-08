@@ -17,7 +17,7 @@ def readme_data():
 
 setup(
     name='ytApiTest',
-    version='1.0.19',
+    version='1.0.22',
     author='fyt',
     author_email='fangyt@163.com',
     packages=["ytApiTest"],
@@ -26,7 +26,8 @@ setup(
         'requests',
         'jsonpath',
         'DingtalkChatbot',
-        'pytest'
+        'pytest',
+        'pytest-parallel'
     ],
     long_description=readme_data(),
     url='https://github.com/fangyt/ytApiTest.git'
