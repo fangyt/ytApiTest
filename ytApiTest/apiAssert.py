@@ -55,10 +55,13 @@ class InterFaceAssert():
 			
 			for key, value in assert_value.items():
 				assert operator.eq(find_value[key], value), apiRequest.InterFaceReq().send_case_error_info(
-					'response={response} \n\n assert={assert}'.format_map
+					'response: {response} \n\n assert: {assert}\n\n url: {url}\n\n params: {params}\n\nheaders: {headers}'.format_map
 						(
 						{'response': {key: find_value[key]},
-						 'assert': {key: value}
+						 'assert': {key: value},
+						 'url': response_data.url,
+						 'params': response_data.request.body,
+						 'headers': response_data.request.headers
 						 }
 					)
 				)
@@ -66,9 +69,14 @@ class InterFaceAssert():
 		elif isinstance(assert_value, list) and isinstance(find_value, list):
 			
 			for index, value in enumerate(assert_value):
-				error_info = 'response={response} \n\n assert={assert}'.format_map(
+				error_info = 'response: {response} \n\n assert: {assert}\n\n url: {url}\n\n params: {params}\n\nheaders: {headers}'.format_map(
 					{'response': find_value,
-					 'assert': value})
+					 'assert': assert_value,
+					 'url': response_data.url,
+					 'params': response_data.request.body,
+					 'headers': response_data.request.headers
+					 }
+				)
 				assert operator.ne(find_value.count(value), 0), apiRequest.InterFaceReq().send_case_error_info(
 					error_info)
 	
@@ -82,7 +90,7 @@ class InterFaceAssert():
 		'''
 		find_value = self.find_interface_assert_value(response_data=response_data,
 		                                              json_expr=json_expr)
-		
+		assert operator.ne(assert_value, None), AssertionError('断言值为空{assert_value}'.format(assert_value=assert_value))
 		if isinstance(find_value, dict) and isinstance(assert_value, dict):
 			self.assert_dict_eq(response_dic=find_value,
 			                    assert_dic=assert_value)
@@ -115,9 +123,10 @@ class InterFaceAssert():
 		self.assert_length_ep(response_value=response_dic,
 		                      assert_value=assert_dic)
 		for key, value in assert_dic.items():
-			assert operator.eq(response_dic[key], value), 'response={response} \n\n assert={assert}'.format_map(
-				{'response': {key: response_dic[key]},
-				 'assert': {key: value}})
+			assert operator.eq(response_dic[key], value), apiRequest.InterFaceReq().send_case_error_info(
+				'response={response} \n\n assert={assert}'.format_map(
+					{'response': {key: response_dic[key]},
+					 'assert': {key: value}}))
 	
 	def assert_list_eq(self, response_list: list, assert_list: list):
 		'''
