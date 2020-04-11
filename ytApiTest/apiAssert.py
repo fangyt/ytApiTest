@@ -23,6 +23,7 @@ class InterFaceAssert():
 	def __init__(self):
 		
 		self.parsing_data = apiData.ParsingData()
+		self.request = apiRequest.InterFaceReq()
 	
 	def find_interface_assert_value(self, response_data: requests.Response, json_expr: str):
 		'''
@@ -41,7 +42,7 @@ class InterFaceAssert():
 		
 		return find_value[0]
 	
-	def assert_body_include_value(self, response_data, assert_value, json_expr):
+	def assert_include(self, response_data, assert_value, json_expr,**kwargs):
 		'''
 		判断是否包含
 		:param response_data: 接口返回数据
@@ -51,36 +52,48 @@ class InterFaceAssert():
 		'''
 		find_value = self.find_interface_assert_value(response_data=response_data,
 		                                              json_expr=json_expr)
+		default_bool = False
+		des = self.parsing_data.get_interface_des(interface_name=kwargs.get('interface_name'),
+		                                          assert_name=kwargs.get('assert_name'))
 		if isinstance(assert_value, dict) and isinstance(find_value, dict):
+			error_info = '\ndes:{des}\n\nresponse: {response} \n\n assert: {assert}\n\n url: {url}\n\n params: {params}\n\nheaders: {headers}'
 			
 			for key, value in assert_value.items():
-				assert operator.eq(find_value[key], value), apiRequest.InterFaceReq().send_case_error_info(
-					'response: {response} \n\n assert: {assert}\n\n url: {url}\n\n params: {params}\n\nheaders: {headers}'.format_map
+				if find_value.__contains__(key):
+					default_bool = True
+				assert operator.eq(find_value[key], value), self.request.send_case_error_info(
+					error_info.format_map
 						(
-						{'response': {key: find_value[key]},
+						{'des':des,
+						'response': {key: find_value[key]},
 						 'assert': {key: value},
 						 'url': response_data.url,
 						 'params': response_data.request.body,
 						 'headers': response_data.request.headers
+						 
 						 }
 					)
 				)
+			assert default_bool, self.request.send_case_error_info(
+				error_info='find_value = {find_value}\n\nassert_value = {assert_value}'.format(
+					assert_value=assert_value, find_value=find_value))
 		
 		elif isinstance(assert_value, list) and isinstance(find_value, list):
 			
 			for index, value in enumerate(assert_value):
-				error_info = 'response: {response} \n\n assert: {assert}\n\n url: {url}\n\n params: {params}\n\nheaders: {headers}'.format_map(
-					{'response': find_value,
+				error_info = '\ndes:{des}\n\nresponse: {response} \n\n assert: {assert}\n\n url: {url}\n\n params: {params}\n\nheaders: {headers}'.format_map(
+					{'des':des,
+					'response': find_value,
 					 'assert': assert_value,
 					 'url': response_data.url,
 					 'params': response_data.request.body,
 					 'headers': response_data.request.headers
 					 }
 				)
-				assert operator.ne(find_value.count(value), 0), apiRequest.InterFaceReq().send_case_error_info(
+				assert operator.ne(find_value.count(value), 0), self.request.send_case_error_info(
 					error_info)
 	
-	def assert_body_eq_assert_value(self, response_data, assert_value, json_expr):
+	def assert_eq(self, response_data, assert_value, json_expr,**kwargs):
 		'''
 		断言
 		:param response_data: 接口返回值
@@ -90,7 +103,8 @@ class InterFaceAssert():
 		'''
 		find_value = self.find_interface_assert_value(response_data=response_data,
 		                                              json_expr=json_expr)
-		assert operator.ne(assert_value, None), AssertionError('断言值为空{assert_value}'.format(assert_value=assert_value))
+		error_info = '断言值为空{assert_value}'
+		assert operator.ne(assert_value, None), self.request.send_case_error_info(error_info.format(assert_value=assert_value))
 		if isinstance(find_value, dict) and isinstance(assert_value, dict):
 			self.assert_dict_eq(response_dic=find_value,
 			                    assert_dic=assert_value)
@@ -99,50 +113,64 @@ class InterFaceAssert():
 			self.assert_list_eq(response_list=response_data,
 			                    assert_list=assert_value)
 	
-	def assert_length_ep(self, response_value, assert_value):
+	def assert_length_eq(self, response_value, assert_value,**kwargs):
 		'''
 		判断对比数据长度
 		:param response_value:
 		:param assert_value:
 		:return:
 		'''
-		error_info = 'response_length: {response_length} \n\n assert_length: {assert_length}'.format_map(
+		des = self.parsing_data.get_interface_des(interface_name=kwargs.get('interface_name'),
+		                                          assert_name=kwargs.get('assert_name'))
+		error_info = '\ndes:{des}\n\nresponse_length: {response_length} \n\n assert_length: {assert_length}'.format_map(
 			{'response_length': len(response_value),
-			 'assert_length': len(assert_value)})
+			 'assert_length': len(assert_value),
+			 'des':des})
 		
-		assert operator.eq(len(response_value), len(assert_value)), apiRequest.InterFaceReq().send_case_error_info(
+		assert operator.eq(len(response_value), len(assert_value)), self.request.send_case_error_info(
 			error_info)
 	
-	def assert_dict_eq(self, response_dic: dict, assert_dic: dict):
+	def assert_dict_eq(self, response_dic: dict, assert_dic: dict,**kwargs):
 		'''
 		判断字典是否相等
 		:param response_dic: 返回值
 		:param assert_dic: 断言字典
 		:return:
 		'''
-		self.assert_length_ep(response_value=response_dic,
+		self.assert_length_eq(response_value=response_dic,
 		                      assert_value=assert_dic)
+		
+		error_info = '\ndes={des}\n\nresponse={response} \n\n assert={assert}'
+		des = self.parsing_data.get_interface_des(interface_name=kwargs.get('interface_name'),
+		                                          assert_name=kwargs.get('assert_name'))
 		for key, value in assert_dic.items():
-			assert operator.eq(response_dic[key], value), apiRequest.InterFaceReq().send_case_error_info(
-				'response={response} \n\n assert={assert}'.format_map(
+			assert operator.eq(response_dic[key], value), self.request.send_case_error_info(
+				error_info.format_map(
 					{'response': {key: response_dic[key]},
-					 'assert': {key: value}}))
+					 'assert': {key: value},
+					 'des':des}))
 	
-	def assert_list_eq(self, response_list: list, assert_list: list):
+	def assert_list_eq(self, response_list: list, assert_list: list,**kwargs):
 		'''
 		判断列表数据是否相等
 		:param response_list:
 		:param assert_list:
 		:return:
 		'''
-		self.assert_length_ep(response_value=response_list,
+		self.assert_length_eq(response_value=response_list,
 		                      assert_value=assert_list)
 		
+		des = self.parsing_data.get_interface_des(interface_name=kwargs.get('interface_name'),
+		                                          assert_name=kwargs.get('assert_name'))
+		
+		error_info = '\ndes:{des}\n\nresponse={response} \n\n assert={assert}'
+		
 		for index, value in enumerate(assert_list):
-			assert operator.eq(response_list[index], value), apiRequest.InterFaceReq().send_case_error_info(
-				'response={response} \n\n assert={assert}'.format_map(
+			assert operator.eq(response_list[index], value), self.request.send_case_error_info(
+				error_info.format_map(
 					{'response': response_list[index],
-					 'assert': value}))
+					 'assert': value,
+					 'des':des}))
 	
 	def assert_response_url_status(self, response):
 		'''
@@ -153,13 +181,12 @@ class InterFaceAssert():
 		
 		response_str = json.dumps(self.parsing_data.parse_response_data(response))
 		for rep_value in response_str.split(','):
-			
 			if rep_value.rfind('https') != -1:
 				url = str(rep_value[rep_value.rfind('https'):]).replace("\"", '').replace(',', '')
 				requests.packages.urllib3.disable_warnings()
 				body = requests.get(self.rem_special_chars(url), verify=False)
 				error_info = {url: body.status_code}
-				assert operator.eq(body.status_code, 200), apiRequest.InterFaceReq().send_case_error_info(
+				assert operator.eq(body.status_code, 200), self.request.send_case_error_info(
 					'状态码错误{error_info}'.format(error_info=error_info))
 	
 	def rem_special_chars(self, string: str):

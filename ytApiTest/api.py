@@ -94,19 +94,26 @@ def update_interface_request_data(interface_name, assert_name, new_request_data:
 	                                                   new_request_data=new_request_data)
 
 
-def assert_body_eq_assert_value(response_data, assert_value, json_expr=None):
+def assert_body_eq_assert_value(response_data=None, assert_value=None, json_expr=None,**kwargs):
 	'''
 	断言
 	:param response_data: 接口返回值
 	:param assert_value: 请求数据
 	:param json_expr: jsonpath表达式
 	'''
-	InterFaceAssert().assert_body_eq_assert_value(response_data=response_data,
+	
+	if kwargs.__contains__('interface_name') and kwargs.__contains__('assert_name'):
+		
+		response_data = post(interface_name=kwargs.get('interface_name'),assert_name=kwargs.get('assert_name'),host_key=kwargs.get('host_key'))
+		assert_value = get_interface_case_assert_data(interface_name=kwargs.get('interface_name'),assert_name=kwargs.get('assert_name'))
+		json_expr = get_interface_json_path(interface_name=kwargs.get('interface_name'),assert_name=kwargs.get('assert_name'))
+	
+	InterFaceAssert().assert_eq(response_data=response_data,
 	                                              assert_value=assert_value,
-	                                              json_expr=json_expr)
+	                                              json_expr=json_expr,**kwargs)
 
 
-def assert_body_include_value(response_data, assert_value, json_expr=None):
+def assert_body_include_value(response_data=None,assert_value=None,json_expr=None,**kwargs):
 	'''
 	判断是否包含
 	:param response_data: 接口返回数据
@@ -115,15 +122,33 @@ def assert_body_include_value(response_data, assert_value, json_expr=None):
 	:return:
 	'''
 	
-	InterFaceAssert().assert_body_include_value(response_data=response_data,
+	if kwargs.__contains__('interface_name') and kwargs.__contains__('assert_name'):
+		response_data = post(interface_name=kwargs.get('interface_name'), assert_name=kwargs.get('assert_name'),
+		                     host_key=kwargs.get('host_key'))
+		assert_value = get_interface_case_assert_data(interface_name=kwargs.get('interface_name'),
+		                                              assert_name=kwargs.get('assert_name'))
+		json_expr = get_interface_json_path(interface_name=kwargs.get('interface_name'),
+		                                    assert_name=kwargs.get('assert_name'))
+	
+	InterFaceAssert().assert_include(response_data=response_data,
 	                                            assert_value=assert_value,
-	                                            json_expr=json_expr)
+	                                            json_expr=json_expr,
+	                                            **kwargs
+	                                            )
 
 
-def assert_response_url_status(response):
+def assert_response_url_status(response,**kwargs):
 	'''
 	断言返回值中所有URL是否可以正常访问
 	:param response: 后台返回值
 	:return:
 	'''
+	if kwargs.__contains__('interface_name') and kwargs.__contains__('assert_name'):
+		
+		response = post(interface_name=kwargs.get('interface_name'), assert_name=kwargs.get('assert_name'),
+		                     host_key=kwargs.get('host_key'))
+	
 	InterFaceAssert().assert_response_url_status(response=response)
+
+if __name__ == '__main__':
+    assert_body_include_value()

@@ -316,8 +316,13 @@ class ParsingData():
 		
 		elif isinstance(response_data, dict):
 			return response_data
+		
+	def get_interface_setup_lsit(self,interface_name,assert_name):
+		pass
 
 
 if __name__ == '__main__':
 	pass
+	import  unittest
+	unittest.TestCase().tearDown()
 	
