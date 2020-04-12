@@ -7,6 +7,7 @@
 import requests
 
 from ytApiTest.apiData import ParsingData
+from ytApiTest.apiAssert import InterFaceAssert
 from dingtalkchatbot.chatbot import DingtalkChatbot
 
 
@@ -15,6 +16,7 @@ class InterFaceReq():
 	def __init__(self):
 		
 		self.parsing_data = ParsingData()
+		self._assert =  InterFaceAssert()
 	
 	def get_interface_cookie(self, url: str, host_key=None):
 		'''
@@ -76,6 +78,10 @@ class InterFaceReq():
 		response = requests.get(url=url,
 		                        params=params,
 		                        headers=headers)
+		
+		self._assert.assert_url_status_code(response_data=response,
+		                                    interface_name=interface_name,
+		                                    assert_name=assert_name)
 		self.parsing_data.save_response_data(response)
 		
 		return response
@@ -98,8 +104,10 @@ class InterFaceReq():
 		                         data=params,
 		                         headers=headers,
 		                         verify=False)
+		self._assert.assert_url_status_code(response_data=response,
+		                                    interface_name=interface_name,
+		                                    assert_name=assert_name)
 		self.parsing_data.save_response_data(response)
-		
 		return response
 	
 	def send_case_error_info(self, error_info):

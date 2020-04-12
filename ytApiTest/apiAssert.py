@@ -55,43 +55,65 @@ class InterFaceAssert():
 		default_bool = False
 		des = self.parsing_data.get_interface_des(interface_name=kwargs.get('interface_name'),
 		                                          assert_name=kwargs.get('assert_name'))
-		if isinstance(assert_value, dict) and isinstance(find_value, dict):
-			error_info = '\ndes:{des}\n\nresponse: {response} \n\n assert: {assert}\n\n url: {url}\n\n params: {params}\n\nheaders: {headers}'
+		
+		setup_list = self.parsing_data.get_interface_setup_list(interface_name=kwargs.get('interface_name'),
+		                                          assert_name=kwargs.get('assert_name'))
+		
+		self.run_case_request(request_list=setup_list)
+		
+		try:
+			if isinstance(assert_value, dict) and isinstance(find_value, dict):
+				error_info = '\ndes:{des}' \
+				             '\n\nresponse: {response}' \
+				             '\n\n assert: {assert}' \
+				             '\n\n url: {url}' \
+				             '\n\n params: {params}' \
+				             '\n\nheaders: {headers}'
+				
+				for key, value in assert_value.items():
+					if find_value.__contains__(key):
+						default_bool = True
+					assert operator.eq(find_value[key], value), self.request.send_case_error_info(
+						error_info.format_map
+							(
+							{'des': des,
+							 'response': {key: find_value[key]},
+							 'assert': {key: value},
+							 'url': response_data.url,
+							 'params': response_data.request.body,
+							 'headers': response_data.request.headers
+								
+							 }
+						)
+					)
+				assert default_bool, self.request.send_case_error_info(
+					error_info='find_value = {find_value}'
+					           '\n\nassert_value = {assert_value}'.format(
+						assert_value=assert_value, find_value=find_value))
 			
-			for key, value in assert_value.items():
-				if find_value.__contains__(key):
-					default_bool = True
-				assert operator.eq(find_value[key], value), self.request.send_case_error_info(
-					error_info.format_map
-						(
-						{'des':des,
-						'response': {key: find_value[key]},
-						 'assert': {key: value},
+			elif isinstance(assert_value, list) and isinstance(find_value, list):
+				
+				for index, value in enumerate(assert_value):
+					error_info = '\ndes:{des}' \
+					             '\n\nresponse: {response} ' \
+					             '\n\n assert: {assert}' \
+					             '\n\n url: {url}' \
+					             '\n\n params: {params}' \
+					             '\n\nheaders: {headers}'.format_map(
+						{'des': des,
+						 'response': find_value,
+						 'assert': assert_value,
 						 'url': response_data.url,
 						 'params': response_data.request.body,
 						 'headers': response_data.request.headers
-						 
 						 }
 					)
-				)
-			assert default_bool, self.request.send_case_error_info(
-				error_info='find_value = {find_value}\n\nassert_value = {assert_value}'.format(
-					assert_value=assert_value, find_value=find_value))
-		
-		elif isinstance(assert_value, list) and isinstance(find_value, list):
+					assert operator.ne(find_value.count(value), 0), self.request.send_case_error_info(
+						error_info)
+		finally:
 			
-			for index, value in enumerate(assert_value):
-				error_info = '\ndes:{des}\n\nresponse: {response} \n\n assert: {assert}\n\n url: {url}\n\n params: {params}\n\nheaders: {headers}'.format_map(
-					{'des':des,
-					'response': find_value,
-					 'assert': assert_value,
-					 'url': response_data.url,
-					 'params': response_data.request.body,
-					 'headers': response_data.request.headers
-					 }
-				)
-				assert operator.ne(find_value.count(value), 0), self.request.send_case_error_info(
-					error_info)
+			self.run_case_request(self.parsing_data.get_interface_tear_down_list(interface_name=kwargs.get('interface_name'),
+		                                          assert_name=kwargs.get('assert_name')))
 	
 	def assert_eq(self, response_data, assert_value, json_expr,**kwargs):
 		'''
@@ -103,15 +125,29 @@ class InterFaceAssert():
 		'''
 		find_value = self.find_interface_assert_value(response_data=response_data,
 		                                              json_expr=json_expr)
-		error_info = '断言值为空{assert_value}'
-		assert operator.ne(assert_value, None), self.request.send_case_error_info(error_info.format(assert_value=assert_value))
-		if isinstance(find_value, dict) and isinstance(assert_value, dict):
-			self.assert_dict_eq(response_dic=find_value,
-			                    assert_dic=assert_value)
 		
-		if isinstance(find_value, list) and isinstance(assert_value, list):
-			self.assert_list_eq(response_list=response_data,
-			                    assert_list=assert_value)
+		des = self.parsing_data.get_interface_des(interface_name=kwargs.get('interface_name'),
+		                                          assert_name=kwargs.get('assert_name'))
+		
+		error_info = '\ndes{des}\n\n断言值为空{assert_value}'
+		assert operator.ne(assert_value, None), self.request.send_case_error_info(error_info.format(assert_value=assert_value,
+		                                                                                            des=des))
+		self.run_case_request(request_list=self.parsing_data.get_interface_setup_list(interface_name=kwargs.get('interface_name'),
+		                                                        assert_name=kwargs.get('assert_name')))
+
+		try:
+			if isinstance(find_value, dict) and isinstance(assert_value, dict):
+				self.assert_dict_eq(response_dic=find_value,
+				                    assert_dic=assert_value,
+				                    **kwargs)
+			
+			if isinstance(find_value, list) and isinstance(assert_value, list):
+				self.assert_list_eq(response_list=response_data,
+				                    assert_list=assert_value,
+				                    **kwargs)
+		finally:
+			self.run_case_request(self.parsing_data.get_interface_tear_down_list(interface_name=kwargs.get('interface_name'),
+		                                          assert_name=kwargs.get('assert_name')))
 	
 	def assert_length_eq(self, response_value, assert_value,**kwargs):
 		'''
@@ -140,7 +176,9 @@ class InterFaceAssert():
 		self.assert_length_eq(response_value=response_dic,
 		                      assert_value=assert_dic)
 		
-		error_info = '\ndes={des}\n\nresponse={response} \n\n assert={assert}'
+		error_info = '\ndes={des}' \
+		             '\n\nresponse={response} '\
+		             '\n\n assert={assert}'
 		des = self.parsing_data.get_interface_des(interface_name=kwargs.get('interface_name'),
 		                                          assert_name=kwargs.get('assert_name'))
 		for key, value in assert_dic.items():
@@ -163,7 +201,9 @@ class InterFaceAssert():
 		des = self.parsing_data.get_interface_des(interface_name=kwargs.get('interface_name'),
 		                                          assert_name=kwargs.get('assert_name'))
 		
-		error_info = '\ndes:{des}\n\nresponse={response} \n\n assert={assert}'
+		error_info = '\ndes:{des}' \
+		             '\n\nresponse={response}' \
+		             '\n\n assert={assert}'
 		
 		for index, value in enumerate(assert_list):
 			assert operator.eq(response_list[index], value), self.request.send_case_error_info(
@@ -180,6 +220,7 @@ class InterFaceAssert():
 		'''
 		
 		response_str = json.dumps(self.parsing_data.parse_response_data(response))
+		
 		for rep_value in response_str.split(','):
 			if rep_value.rfind('https') != -1:
 				url = str(rep_value[rep_value.rfind('https'):]).replace("\"", '').replace(',', '')
@@ -187,7 +228,7 @@ class InterFaceAssert():
 				body = requests.get(self.rem_special_chars(url), verify=False)
 				error_info = {url: body.status_code}
 				assert operator.eq(body.status_code, 200), self.request.send_case_error_info(
-					'状态码错误{error_info}'.format(error_info=error_info))
+					'\n状态码错误{error_info}'.format(error_info=error_info))
 	
 	def rem_special_chars(self, string: str):
 		'''
@@ -208,7 +249,40 @@ class InterFaceAssert():
 		}
 		
 		return string.translate(remap)
-
+	
+	def assert_url_status_code(self,response_data,**kwargs):
+		'''
+		断言url状态是否200
+		:param response_data:
+		:param kwargs:
+		:return:
+		'''
+		des = self.parsing_data.get_interface_des(interface_name=kwargs.get('interface_name'),
+		                                          assert_name=kwargs.get('assert_name'))
+		error_info = '\ndes: {des}' \
+		             '\n\n{info}'.format_map({'des': des,
+		                                                  'info': {response_data.url: response_data.status_code}})
+		assert operator.eq(response_data.status_code, 200), self.request.send_case_error_info(error_info=error_info)
+	
+	def run_case_request(self,request_list: list):
+		'''
+		用例前置和后置操作
+		:param request_list:
+		:return:
+		'''
+		if request_list != None and len(request_list) != 0:
+			
+			for dic in request_list:
+				
+				response_data = self.request.post(interface_name=dic['interface_name'],
+				                                  assert_name=dic['assert_name'],
+				                                  host_key=dic.get('host_key'))
+				
+				self.assert_url_status_code(response_data=response_data,
+				                            interface_name=dic['interface_name'],
+				                            assert_name=dic['assert_name'])
+				
+				
 
 if __name__ == '__main__':
 	pass

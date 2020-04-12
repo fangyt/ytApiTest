@@ -10,7 +10,6 @@ from ytApiTest.apiRequest import InterFaceReq
 from ytApiTest.apiAssert import InterFaceAssert
 from ytApiTest.apiData import ParsingData
 
-
 def get(interface_name, assert_name, host_key=None):
 	return InterFaceReq().get(interface_name=interface_name,
 	                          assert_name=assert_name,
@@ -150,5 +149,9 @@ def assert_response_url_status(response,**kwargs):
 	
 	InterFaceAssert().assert_response_url_status(response=response)
 
+
+	
+
 if __name__ == '__main__':
-    assert_body_include_value()
+ 
+	pass

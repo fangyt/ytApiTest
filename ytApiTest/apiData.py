@@ -17,6 +17,9 @@ class YAML_CONFIG_KEY():
 	INTERFACE_CASE_DES = 'des'
 	DING_TALK_URL = 'DING_TALK_URL'
 	INTERFACE_JSON_PATH = 'json_expr'
+	INTERFACE_ASSERT_DATA_SETUP = 'setup'
+	INTERFACE_REQUEST_DATA_TEARDOWN = 'tearDown'
+	
 
 
 class FindFile():
@@ -83,6 +86,7 @@ class ParsingData():
 		
 		self.yaml_data = YamlSingleton().yaml_data
 		self.response_data = YamlSingleton().res_data
+		self.yaml_key = YAML_CONFIG_KEY
 	
 	def get_interface_data(self, interface_name, assert_name, yaml_config_key):
 		
@@ -94,7 +98,8 @@ class ParsingData():
         :return:
         '''
 		
-		if self.yaml_data.__contains__(interface_name) and self.yaml_data[interface_name].__contains__(assert_name):
+		if self.yaml_data.__contains__(interface_name) and \
+				self.yaml_data[interface_name].__contains__(assert_name):
 			
 			if self.yaml_data[interface_name][assert_name].__contains__(yaml_config_key):
 				return self.yaml_data[interface_name][assert_name][yaml_config_key]
@@ -162,6 +167,30 @@ class ParsingData():
 		return self.get_interface_data(interface_name=interface_name,
 		                               assert_name=assert_name,
 		                               yaml_config_key=YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA)
+	
+	def get_interface_setup_list(self,interface_name,assert_name):
+		'''
+		获取前置操作接口数据
+		:param interface_name: 接口名称
+		:param assert_name: 接口关联断言名称
+		:return:
+		'''
+		
+		return self.get_interface_data(interface_name=interface_name,
+		                               assert_name=assert_name,
+		                               yaml_config_key=self.yaml_key.INTERFACE_ASSERT_DATA_SETUP)
+	
+	def get_interface_tear_down_list(self,interface_name,assert_name):
+		'''
+		获取用例后置操作
+		:param interface_name: 接口名称
+		:param assert_name: 接口关联断言名称
+		:return:
+		'''
+		self.get_interface_data(interface_name=interface_name,
+		                        assert_name=assert_name,
+		                        yaml_config_key=self.yaml_key.INTERFACE_REQUEST_DATA_TEARDOWN)
+	
 	
 	def get_interface_des(self, interface_name, assert_name):
 		
@@ -317,12 +346,12 @@ class ParsingData():
 		elif isinstance(response_data, dict):
 			return response_data
 		
-	def get_interface_setup_lsit(self,interface_name,assert_name):
-		pass
+	
+		
+		
 
 
 if __name__ == '__main__':
 	pass
-	import  unittest
-	unittest.TestCase().tearDown()
+	
 	
