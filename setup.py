@@ -17,7 +17,7 @@ def readme_data():
 
 setup(
     name='ytApiTest',
-    version='1.0.24',
+    version='1.0.25',
     author='fyt',
     author_email='fangyt@163.com',
     packages=["ytApiTest"],

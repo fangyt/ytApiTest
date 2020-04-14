@@ -20,6 +20,8 @@
 -  支持 断言接口返回值，字段某部分或某个键值对是否存在返回值中
 -  支持 断言接口返回值所有字段是否与断言值相等
 -  支持 断言失败发送对应错误接口信息到钉钉群
+-  支持 用例前置、后置操作
+-  支持 对用例指定用户做请求。
 
 | 使用：
 
@@ -28,11 +30,11 @@
 
 .. code:: python
 
-    配置钉钉机器人URL
-    DING_TALK_URL: https://钉钉机器人URL
+    YAML文件用例支持关键字：
+     DING_TALK_URL:钉钉群机器人url此项必须配置
+     OBJECT_HOST: 项目host，可配置多个不同host例：OBJECT_HOST：
+                                                       host_key: host
 
-    项目host
-    OBJECT_HOST: https://object/host
 
 
     interface_name(你接口名称,可自己命名):
@@ -42,6 +44,9 @@
                                                     req_data(此关键字必须包含): 接口请求参数,值可为空
                                                     ast_data(此关键字必须包含): 接口断言值,值可为空
                                                     json_expr(此关键值必须包含): 返回查找路径,值可为空
+                                                    setup：用例前置操作
+                                                    teardown：用例后置操作
+
 
 - .yaml文件内使用JSONPATH语法示例
 
@@ -129,3 +134,4 @@
     #读取.yaml文件内对应的接口值并发送post请求到后台,返回response对象
     ytApiTest.update_case_req_data(interface_key=None, assert_key=None,new_request_data=None）
     参数：interface_key=接口名称, assert_key=断言值,req_data=请求字典
+

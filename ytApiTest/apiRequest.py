@@ -16,7 +16,6 @@ class InterFaceReq():
 	def __init__(self):
 		
 		self.parsing_data = ParsingData()
-		self._assert =  InterFaceAssert()
 	
 	def get_interface_cookie(self, url: str, host_key=None):
 		'''
@@ -79,7 +78,7 @@ class InterFaceReq():
 		                        params=params,
 		                        headers=headers)
 		
-		self._assert.assert_url_status_code(response_data=response,
+		InterFaceAssert().assert_url_status_code(response_data=response,
 		                                    interface_name=interface_name,
 		                                    assert_name=assert_name)
 		self.parsing_data.save_response_data(response)
@@ -104,7 +103,7 @@ class InterFaceReq():
 		                         data=params,
 		                         headers=headers,
 		                         verify=False)
-		self._assert.assert_url_status_code(response_data=response,
+		InterFaceAssert().assert_url_status_code(response_data=response,
 		                                    interface_name=interface_name,
 		                                    assert_name=assert_name)
 		self.parsing_data.save_response_data(response)

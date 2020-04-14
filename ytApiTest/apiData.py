@@ -187,7 +187,7 @@ class ParsingData():
 		:param assert_name: 接口关联断言名称
 		:return:
 		'''
-		self.get_interface_data(interface_name=interface_name,
+		return self.get_interface_data(interface_name=interface_name,
 		                        assert_name=assert_name,
 		                        yaml_config_key=self.yaml_key.INTERFACE_REQUEST_DATA_TEARDOWN)
 	
