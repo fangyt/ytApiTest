@@ -55,11 +55,7 @@ class InterFaceAssert():
 		default_bool = False
 		des = self.parsing_data.get_interface_des(interface_name=kwargs.get('interface_name'),
 		                                          assert_name=kwargs.get('assert_name'))
-		
-		setup_list = self.parsing_data.get_interface_setup_list(interface_name=kwargs.get('interface_name'),
-		                                          assert_name=kwargs.get('assert_name'))
-		
-		self.run_case_request(request_list=setup_list)
+
 		
 		try:
 			if isinstance(assert_value, dict) and isinstance(find_value, dict):
@@ -132,9 +128,7 @@ class InterFaceAssert():
 		error_info = '\ndes{des}\n\n断言值为空{assert_value}'
 		assert operator.ne(assert_value, None), self.request.send_case_error_info(error_info.format(assert_value=assert_value,
 		                                                                                            des=des))
-		self.run_case_request(request_list=self.parsing_data.get_interface_setup_list(interface_name=kwargs.get('interface_name'),
-		                                                        assert_name=kwargs.get('assert_name')))
-
+		
 		try:
 			if isinstance(find_value, dict) and isinstance(assert_value, dict):
 				self.assert_dict_eq(response_dic=find_value,
@@ -142,7 +136,7 @@ class InterFaceAssert():
 				                    **kwargs)
 			
 			if isinstance(find_value, list) and isinstance(assert_value, list):
-				self.assert_list_eq(response_list=response_data,
+				self.assert_list_eq(response_list=find_value,
 				                    assert_list=assert_value,
 				                    **kwargs)
 		finally:

@@ -102,7 +102,9 @@ def assert_body_eq_assert_value(response_data=None, assert_value=None, json_expr
 	'''
 	
 	if kwargs.__contains__('interface_name') and kwargs.__contains__('assert_name'):
-		
+		InterFaceAssert().run_case_request(
+			request_list=ParsingData().get_interface_setup_list(interface_name=kwargs.get('interface_name'),
+			                                                    assert_name=kwargs.get('assert_name')))
 		response_data = post(interface_name=kwargs.get('interface_name'),assert_name=kwargs.get('assert_name'),host_key=kwargs.get('host_key'))
 		assert_value = get_interface_case_assert_data(interface_name=kwargs.get('interface_name'),assert_name=kwargs.get('assert_name'))
 		json_expr = get_interface_json_path(interface_name=kwargs.get('interface_name'),assert_name=kwargs.get('assert_name'))
@@ -122,6 +124,10 @@ def assert_body_include_value(response_data=None,assert_value=None,json_expr=Non
 	'''
 	
 	if kwargs.__contains__('interface_name') and kwargs.__contains__('assert_name'):
+		
+		InterFaceAssert().run_case_request(request_list=ParsingData().get_interface_setup_list(interface_name=kwargs.get('interface_name'),
+		                                                                                       assert_name=kwargs.get('assert_name')))
+		
 		response_data = post(interface_name=kwargs.get('interface_name'), assert_name=kwargs.get('assert_name'),
 		                     host_key=kwargs.get('host_key'))
 		assert_value = get_interface_case_assert_data(interface_name=kwargs.get('interface_name'),
