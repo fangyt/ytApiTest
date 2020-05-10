@@ -4,7 +4,8 @@
 # Author : fyt
 # File   : apiRequest.py
 
-import requests
+import requests,json
+
 
 from ytApiTest.apiData import ParsingData
 from ytApiTest.apiAssert import InterFaceAssert
@@ -23,6 +24,8 @@ class InterFaceReq():
 		:param url: 完整接口url
 		:return:
 		'''
+		
+		
 		if host_key != None:
 			
 			cookie_key = host_key
@@ -47,15 +50,23 @@ class InterFaceReq():
 				headers = response.request.headers
 			
 			elif response.headers['Content-Type'] != 'text/html; charset=UTF-8':
-				headers = {'User-Agent': 'python-requests/2.22.0',
-				           'Accept-Encoding': 'gzip, deflate',
-				           'Accept': '*/*',
-				           'Connection': 'keep-alive',
-				           'Cookie': 'userId={userId}; sessionId={sessionId}; SMclient=MicroMessenger; SMmodel=Xiaomi_MI_8; SMsystem=Android_8.1.0; SMver=7.0.3; SMdisplay=393x818; SDKVersion=2.6.1; weId=supermonkey-weapp-gear; version=1.2.0;'.format(
-					           userId=response.json()['data']['userinfo']['userId'],
-					           sessionId=response.json()['data']['sessionId']),
-				           'Content-Length': '0'
-				           }
+				
+				if response.json().__contains__('data') and response.json()['data'].__contains__('userinfo'):
+				
+					headers = {'User-Agent': 'python-requests/2.22.0',
+					           'Accept-Encoding': 'gzip, deflate',
+					           'Accept': '*/*',
+					           'Connection': 'keep-alive',
+					           'Cookie': 'userId={userId}; sessionId={sessionId}; SMclient=MicroMessenger; SMmodel=Xiaomi_MI_8; SMsystem=Android_8.1.0; SMver=7.0.3; SMdisplay=393x818; SDKVersion=2.6.1; weId=supermonkey-weapp-gear; version=1.2.0;'.format(
+						           userId=response.json()['data']['userinfo']['userId'],
+						           sessionId=response.json()['data']['sessionId']),
+					           'Content-Length': '0'
+					           }
+				else:
+					
+					headers = {'User-Agent': 'python-requests/2.23.0', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*',
+			        'Connection': 'keep-alive', 'Content-Length': '11',
+			        'Content-Type': 'application/json; charset=UTF-8'}
 			
 			self.parsing_data.save_response_data(response={cookie_key: headers})
 			
@@ -95,7 +106,7 @@ class InterFaceReq():
 		'''
 		
 		url = self.parsing_data.get_interface_url(interface_name=interface_name, host_key=host_key)
-		params = self.parsing_data.get_interface_request_data(interface_name=interface_name, assert_name=assert_name)
+		params = json.dumps(self.parsing_data.get_interface_request_data(interface_name=interface_name, assert_name=assert_name),ensure_ascii=False)
 		headers = self.get_interface_cookie(url=url, host_key=host_key)
 		requests.packages.urllib3.disable_warnings()
 		
@@ -103,6 +114,7 @@ class InterFaceReq():
 		                         data=params,
 		                         headers=headers,
 		                         verify=False)
+		
 		InterFaceAssert().assert_url_status_code(response_data=response,
 		                                    interface_name=interface_name,
 		                                    assert_name=assert_name)

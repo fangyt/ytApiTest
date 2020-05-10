@@ -25,6 +25,15 @@ class InterFaceAssert():
 		self.parsing_data = apiData.ParsingData()
 		self.request = apiRequest.InterFaceReq()
 	
+	def error_info(self, response_data: requests.Response):
+		
+		return '未从返回值中查找到对比数据\n\n' \
+		       'URL = {URL}\n\n' \
+		       'param = {param}\n\n' \
+		       'response = {response}'.format(URL=response_data.url,
+		                                      param=response_data.request.body,
+		                                      response=response_data.text)
+	
 	def find_interface_assert_value(self, response_data: requests.Response, json_expr: str):
 		'''
 		根据json_path表达式查找接口发返回值对应对比数据
@@ -32,13 +41,15 @@ class InterFaceAssert():
 		:param expr: json_path表达式
 		:return:
 		'''
+		
 		if operator.eq(json_expr, None):
 			return self.parsing_data.parse_response_data(response_data=response_data)
 		
 		response_json = self.parsing_data.parse_response_data(response_data)
-		assert response_json, AssertionError('无法解析返回值{response_data}'.format(response_data=response_data))
+		assert response_json, self.request.send_case_error_info(
+			'无法解析返回值{response_data}'.format(response_data=response_data))
 		find_value = jsonpath.jsonpath(response_json, json_expr)
-		assert find_value, AssertionError('未从返回值中查找到对比数据{find_value}'.format(response_data=find_value))
+		assert find_value, self.request.send_case_error_info(error_info=self.error_info(response_data))
 		
 		return find_value[0]
 	
@@ -129,18 +140,20 @@ class InterFaceAssert():
 		
 		try:
 			if isinstance(find_value, dict) and isinstance(assert_value, dict):
+				print(find_value, '\n\n', assert_value)
 				self.assert_dict_eq(response_dic=find_value,
 				                    assert_dic=assert_value,
 				                    response_data=response_data,
 				                    interface_name=kwargs.get('interface_name'),
 				                    assert_name=kwargs.get('assert_name'))
 			
-			if isinstance(find_value, list) and isinstance(assert_value, list):
+			elif isinstance(find_value, list) and isinstance(assert_value, list):
 				self.assert_list_eq(response_list=find_value,
 				                    assert_list=assert_value,
 				                    response_data=response_data,
 				                    interface_name=kwargs.get('interface_name'),
 				                    assert_name=kwargs.get('assert_name'))
+		
 		finally:
 			self.run_case_request(
 				self.parsing_data.get_interface_tear_down_list(interface_name=kwargs.get('interface_name'),

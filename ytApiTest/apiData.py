@@ -5,7 +5,7 @@
 # File   : apiData.py
 
 import ytApiTest
-import os, yaml, operator, jsonpath, requests
+import os, yaml, operator, jsonpath, requests,json,re
 from urllib.parse import urlparse
 
 
@@ -85,8 +85,9 @@ class ParsingData():
 	def __init__(self):
 		
 		self.yaml_data = YamlSingleton().yaml_data
-		self.response_data = YamlSingleton().res_data
+		self.response_data =YamlSingleton().res_data
 		self.yaml_key = YAML_CONFIG_KEY
+		
 	
 	def get_interface_data(self, interface_name, assert_name, yaml_config_key):
 		
@@ -164,9 +165,12 @@ class ParsingData():
         :return:
         '''
 		
-		return self.get_interface_data(interface_name=interface_name,
+		assert_value = self.get_interface_data(interface_name=interface_name,
 		                               assert_name=assert_name,
 		                               yaml_config_key=YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA)
+		
+		
+		return self.replace_assert_value_json_path(assert_value)
 	
 	def get_interface_setup_list(self,interface_name,assert_name):
 		'''
@@ -345,13 +349,66 @@ class ParsingData():
 		
 		elif isinstance(response_data, dict):
 			return response_data
-		
 	
+	def replace_assert_value_json_path(self,assert_value):
+		'''
+		替换值
+		:param assert_value:
+		:return:
+		'''
+		temp_str = json.dumps(assert_value,ensure_ascii=False)
+		
+		if operator.eq(temp_str,None) or temp_str.find('$') == -1:
+			return json.loads(temp_str)
+		json_path_list = re.compile(r'(\$.*?,)',re.I).findall(temp_str)
+		
+		for index,value in enumerate(json_path_list):
+			json_expr = self.delete_special_character(value)
+			s = temp_str.replace(json_expr,self.find_json_expr_value(value))
+			temp_str = s
+		
+		return json.loads(temp_str)
+
+	def delete_special_character(self,character:str):
+		
+		'''
+		删除特殊字符
+		:param character:
+		:return:
+		'''
+		
+		remap = {
+			ord("\""): None,
+			ord(","): None,
+			ord("\\"): None,
+		}
+		
+		return character.translate(remap)
+		
+		
+	def find_json_expr_value(self,json_expr):
+		'''
+		查找json_expr 返回值
+		:param json_expr:
+		:return:
+		'''
+		
+		if jsonpath.jsonpath(self.response_data,json_expr):
+			
+			return jsonpath.jsonpath(self.response_data,json_expr)
+		
+		elif jsonpath.jsonpath(self.yaml_data,json_expr):
+			
+			return jsonpath.jsonpath(self.yaml_data,json_expr)
+		
+		else:
+			return json_expr
 		
 		
 
 
 if __name__ == '__main__':
 	pass
+	
 	
 	
