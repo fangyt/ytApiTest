@@ -262,7 +262,7 @@ class ParsingData():
 		获取接口返回值
 		:return:
 		'''
-		return self.response_data
+		return YamlSingleton().res_data
 	
 	def get_send_error_info_url(self):
 		'''
@@ -334,14 +334,11 @@ class ParsingData():
 			
 			json_value = response
 		
-		elif response.status_code == 200:
+		else:
+
 			json_key = os.path.split(urlparse(response.request.url).path)[-1]
 			json_key = json_key.replace('.', '/')
 			json_value = {json_key: self.parse_response_data(response_data=response)}
-		
-		else:
-			
-			raise ValueError('接口返回值解析错误{}'.format({response.url: response.status_code}))
 			
 		
 		YamlSingleton().update_response_data(response=json_value)
@@ -375,8 +372,7 @@ class ParsingData():
 		json_path_list = re.compile(r'(\$.*?,)', re.I).findall(temp_str)
 		
 		return json_path_list
-		
-	
+
 	def replace_assert_value_json_path(self, assert_value):
 		'''
 		替换值
@@ -418,7 +414,7 @@ class ParsingData():
 		:return:
 		'''
 		
-		if jsonpath.jsonpath(self.response_data, json_expr):
+		if jsonpath.jsonpath(self.get_interface_response_data(), json_expr):
 			
 			return jsonpath.jsonpath(self.response_data, json_expr)[0]
 		
