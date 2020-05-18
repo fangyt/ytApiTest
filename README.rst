@@ -44,8 +44,8 @@
                                                     req_data(此关键字必须包含): 接口请求参数,值可为空
                                                     ast_data(此关键字必须包含): 接口断言值,值可为空
                                                     json_expr(此关键值必须包含): 返回查找路径,值可为空
-                                                    setup：用例前置操作
-                                                    teardown：用例后置操作
+                                                    setup：用例前置操作,以列表形式保存对应接口请求参数，支持传入interface_name,assert_key,host_key
+                                                    teardown：以列表形式保存对应接口请求参数，支持传入interface_name,assert_key,host_key
 
 
 - .yaml文件内使用JSONPATH语法示例
@@ -61,6 +61,10 @@
                                             key: $.interface_name.data.XXX
                                 ast_data:
                                             key: $.interface_name.data.XXX
+
+                                json_expr: $.interface_name.data.XXX
+                                setup: [{interface_name:interface_name,assert_key:assert_key,host_key:host:key},{...}]
+                                teardown: [{interface_name:interface_name,assert_key:assert_key,host_key:host:key},{...}]
 
 方法说明及使用示例
 ======================

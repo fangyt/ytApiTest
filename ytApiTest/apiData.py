@@ -5,7 +5,7 @@
 # File   : apiData.py
 
 import ytApiTest
-import os, yaml, operator, jsonpath, requests,json,re
+import os, yaml, operator, jsonpath, requests, json, re
 from urllib.parse import urlparse
 
 
@@ -19,7 +19,6 @@ class YAML_CONFIG_KEY():
 	INTERFACE_JSON_PATH = 'json_expr'
 	INTERFACE_ASSERT_DATA_SETUP = 'setup'
 	INTERFACE_REQUEST_DATA_TEARDOWN = 'tearDown'
-	
 
 
 class FindFile():
@@ -85,9 +84,8 @@ class ParsingData():
 	def __init__(self):
 		
 		self.yaml_data = YamlSingleton().yaml_data
-		self.response_data =YamlSingleton().res_data
+		self.response_data = YamlSingleton().res_data
 		self.yaml_key = YAML_CONFIG_KEY
-		
 	
 	def get_interface_data(self, interface_name, assert_name, yaml_config_key):
 		
@@ -152,6 +150,7 @@ class ParsingData():
 		                                       yaml_config_key=YAML_CONFIG_KEY.INTERFACE_REQUEST_DATA)
 		
 		if request_data != None:
+			
 			return self.find_interface_request_data_json_path(request_data=request_data)
 		
 		return request_data
@@ -166,13 +165,12 @@ class ParsingData():
         '''
 		
 		assert_value = self.get_interface_data(interface_name=interface_name,
-		                               assert_name=assert_name,
-		                               yaml_config_key=YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA)
-		
+		                                       assert_name=assert_name,
+		                                       yaml_config_key=YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA)
 		
 		return self.replace_assert_value_json_path(assert_value)
 	
-	def get_interface_setup_list(self,interface_name,assert_name):
+	def get_interface_setup_list(self, interface_name, assert_name):
 		'''
 		获取前置操作接口数据
 		:param interface_name: 接口名称
@@ -184,7 +182,7 @@ class ParsingData():
 		                               assert_name=assert_name,
 		                               yaml_config_key=self.yaml_key.INTERFACE_ASSERT_DATA_SETUP)
 	
-	def get_interface_tear_down_list(self,interface_name,assert_name):
+	def get_interface_tear_down_list(self, interface_name, assert_name):
 		'''
 		获取用例后置操作
 		:param interface_name: 接口名称
@@ -192,9 +190,8 @@ class ParsingData():
 		:return:
 		'''
 		return self.get_interface_data(interface_name=interface_name,
-		                        assert_name=assert_name,
-		                        yaml_config_key=self.yaml_key.INTERFACE_REQUEST_DATA_TEARDOWN)
-	
+		                               assert_name=assert_name,
+		                               yaml_config_key=self.yaml_key.INTERFACE_REQUEST_DATA_TEARDOWN)
 	
 	def get_interface_des(self, interface_name, assert_name):
 		
@@ -218,9 +215,21 @@ class ParsingData():
         :return:
         '''
 		
-		return self.get_interface_data(interface_name=interface_name,
+		json_expr = self.get_interface_data(interface_name=interface_name,
 		                               assert_name=assert_name,
 		                               yaml_config_key=YAML_CONFIG_KEY.INTERFACE_JSON_PATH)
+		
+		if operator.eq(json_expr,None) and operator.eq(json_expr.find('{'),-1 ):
+			
+			start_index = json_expr.find('{')
+			end_index = json_expr.find('}') + 1
+			new_json_expr = json_expr[start_index:end_index]
+			find_value = self.find_json_expr_value(json_expr=new_json_expr)
+			
+			json_expr = json_expr.replace(new_json_expr,find_value)
+			
+		
+		return json_expr
 	
 	def get_interface_url_host_key(self, url: str):
 		
@@ -294,6 +303,7 @@ class ParsingData():
 		                                                             assert_name=assert_name)
 		
 		if old_interface_request_data != None:
+			
 			old_interface_request_data.update(new_request_data)
 	
 	def find_interface_request_data_json_path(self, request_data: dict):
@@ -332,7 +342,7 @@ class ParsingData():
 		else:
 			
 			raise ValueError('接口返回值解析错误{}'.format({response.url: response.status_code}))
-			return
+			
 		
 		YamlSingleton().update_response_data(response=json_value)
 	
@@ -342,34 +352,50 @@ class ParsingData():
         :param response_data:
         :return:
         '''
-		
 		if isinstance(response_data, requests.Response) and operator.eq(response_data.headers['Content-Type'],
-		                                                                'application/json; charset=UTF-8'):
+		                                                                'application/json'):
 			return response_data.json()
 		
 		elif isinstance(response_data, dict):
+			
 			return response_data
+		else:
+			return False
 	
-	def replace_assert_value_json_path(self,assert_value):
+	def find_json_expr(self,find_dic:dict):
+		'''
+		查找断言数据json_expr表达式
+		:param find_dic:
+		:return:
+		'''
+		temp_str = json.dumps(find_dic, ensure_ascii=False)
+		
+		if operator.eq(temp_str, None) or temp_str.find('$') == -1:
+			return json.loads(temp_str)
+		json_path_list = re.compile(r'(\$.*?,)', re.I).findall(temp_str)
+		
+		return json_path_list
+		
+	
+	def replace_assert_value_json_path(self, assert_value):
 		'''
 		替换值
 		:param assert_value:
 		:return:
 		'''
-		temp_str = json.dumps(assert_value,ensure_ascii=False)
 		
-		if operator.eq(temp_str,None) or temp_str.find('$') == -1:
-			return json.loads(temp_str)
-		json_path_list = re.compile(r'(\$.*?,)',re.I).findall(temp_str)
+		temp_str = json.dumps(assert_value, ensure_ascii=False)
 		
-		for index,value in enumerate(json_path_list):
+		json_path_list = self.find_json_expr(assert_value)
+		
+		for index, value in enumerate(json_path_list):
 			json_expr = self.delete_special_character(value)
-			s = temp_str.replace(json_expr,self.find_json_expr_value(value))
+			s = temp_str.replace(json_expr, self.find_json_expr_value(value))
 			temp_str = s
 		
 		return json.loads(temp_str)
-
-	def delete_special_character(self,character:str):
+	
+	def delete_special_character(self, character: str):
 		
 		'''
 		删除特殊字符
@@ -384,27 +410,24 @@ class ParsingData():
 		}
 		
 		return character.translate(remap)
-		
-		
-	def find_json_expr_value(self,json_expr):
+	
+	def find_json_expr_value(self, json_expr):
 		'''
 		查找json_expr 返回值
 		:param json_expr:
 		:return:
 		'''
 		
-		if jsonpath.jsonpath(self.response_data,json_expr):
+		if jsonpath.jsonpath(self.response_data, json_expr):
 			
-			return jsonpath.jsonpath(self.response_data,json_expr)
+			return jsonpath.jsonpath(self.response_data, json_expr)[0]
 		
-		elif jsonpath.jsonpath(self.yaml_data,json_expr):
+		elif jsonpath.jsonpath(self.yaml_data, json_expr):
 			
-			return jsonpath.jsonpath(self.yaml_data,json_expr)
+			return jsonpath.jsonpath(self.yaml_data, json_expr)[0]
 		
 		else:
 			return json_expr
-		
-		
 
 
 if __name__ == '__main__':
@@ -412,3 +435,6 @@ if __name__ == '__main__':
 	
 	
 	
+
+
+

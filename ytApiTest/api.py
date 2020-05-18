@@ -10,6 +10,7 @@ from ytApiTest.apiRequest import InterFaceReq
 from ytApiTest.apiAssert import InterFaceAssert
 from ytApiTest.apiData import ParsingData
 
+
 def get(interface_name, assert_name, host_key=None):
 	return InterFaceReq().get(interface_name=interface_name,
 	                          assert_name=assert_name,
@@ -67,6 +68,11 @@ def get_interface_json_path(interface_name, assert_name):
 	                                             assert_name=assert_name)
 
 
+def get_interface_des(interface_name, assert_name):
+	return ParsingData().get_interface_des(interface_name=interface_name,
+	                                       assert_name=assert_name)
+
+
 def update_interface_json_path(interface_name, assert_name, new_value: dict):
 	'''
 	修改json_path 路径
@@ -93,7 +99,7 @@ def update_interface_request_data(interface_name, assert_name, new_request_data:
 	                                                   new_request_data=new_request_data)
 
 
-def assert_body_eq_assert_value(response_data=None, assert_value=None, json_expr=None,**kwargs):
+def assert_body_eq_assert_value(response_data=None, assert_value=None, json_expr=None, **kwargs):
 	'''
 	断言
 	:param response_data: 接口返回值
@@ -105,16 +111,19 @@ def assert_body_eq_assert_value(response_data=None, assert_value=None, json_expr
 		InterFaceAssert().run_case_request(
 			request_list=ParsingData().get_interface_setup_list(interface_name=kwargs.get('interface_name'),
 			                                                    assert_name=kwargs.get('assert_name')))
-		response_data = post(interface_name=kwargs.get('interface_name'),assert_name=kwargs.get('assert_name'),host_key=kwargs.get('host_key'))
-		assert_value = get_interface_case_assert_data(interface_name=kwargs.get('interface_name'),assert_name=kwargs.get('assert_name'))
-		json_expr = get_interface_json_path(interface_name=kwargs.get('interface_name'),assert_name=kwargs.get('assert_name'))
+		response_data = post(interface_name=kwargs.get('interface_name'), assert_name=kwargs.get('assert_name'),
+		                     host_key=kwargs.get('host_key'))
+		assert_value = get_interface_case_assert_data(interface_name=kwargs.get('interface_name'),
+		                                              assert_name=kwargs.get('assert_name'))
+		json_expr = get_interface_json_path(interface_name=kwargs.get('interface_name'),
+		                                    assert_name=kwargs.get('assert_name'))
 	
 	InterFaceAssert().assert_eq(response_data=response_data,
-	                                              assert_value=assert_value,
-	                                              json_expr=json_expr,**kwargs)
+	                            assert_value=assert_value,
+	                            json_expr=json_expr, **kwargs)
 
 
-def assert_body_include_value(response_data=None,assert_value=None,json_expr=None,**kwargs):
+def assert_body_include_value(response_data=None, assert_value=None, json_expr=None, **kwargs):
 	'''
 	判断是否包含
 	:param response_data: 接口返回数据
@@ -124,9 +133,9 @@ def assert_body_include_value(response_data=None,assert_value=None,json_expr=Non
 	'''
 	
 	if kwargs.__contains__('interface_name') and kwargs.__contains__('assert_name'):
-		
-		InterFaceAssert().run_case_request(request_list=ParsingData().get_interface_setup_list(interface_name=kwargs.get('interface_name'),
-		                                                                                       assert_name=kwargs.get('assert_name')))
+		InterFaceAssert().run_case_request(
+			request_list=ParsingData().get_interface_setup_list(interface_name=kwargs.get('interface_name'),
+			                                                    assert_name=kwargs.get('assert_name')))
 		
 		response_data = post(interface_name=kwargs.get('interface_name'), assert_name=kwargs.get('assert_name'),
 		                     host_key=kwargs.get('host_key'))
@@ -136,28 +145,24 @@ def assert_body_include_value(response_data=None,assert_value=None,json_expr=Non
 		                                    assert_name=kwargs.get('assert_name'))
 	
 	InterFaceAssert().assert_include(response_data=response_data,
-	                                            assert_value=assert_value,
-	                                            json_expr=json_expr,
-	                                            **kwargs
-	                                            )
+	                                 assert_value=assert_value,
+	                                 json_expr=json_expr,
+	                                 **kwargs
+	                                 )
 
 
-def assert_response_url_status(response,**kwargs):
+def assert_response_url_status(response, **kwargs):
 	'''
 	断言返回值中所有URL是否可以正常访问
 	:param response: 后台返回值
 	:return:
 	'''
 	if kwargs.__contains__('interface_name') and kwargs.__contains__('assert_name'):
-		
 		response = post(interface_name=kwargs.get('interface_name'), assert_name=kwargs.get('assert_name'),
-		                     host_key=kwargs.get('host_key'))
+		                host_key=kwargs.get('host_key'))
 	
 	InterFaceAssert().assert_response_url_status(response=response)
 
 
-	
-
 if __name__ == '__main__':
- 
 	pass
