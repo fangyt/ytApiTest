@@ -27,7 +27,9 @@ setup(
         'jsonpath',
         'DingtalkChatbot',
         'pytest',
-        'pytest-parallel'
+        'pytest-parallel',
+        'deepdiff',
+        'allure-pytest'
     ],
     long_description=readme_data(),
     url='https://github.com/fangyt/ytApiTest.git'
