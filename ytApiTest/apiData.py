@@ -4,7 +4,7 @@
 # Author : fyt
 # File   : apiData.py
 
-import os, yaml, operator, jsonpath, requests, json, warnings, copy
+import os, yaml, operator, jsonpath, requests, json, warnings, copy, time
 from urllib.parse import urlparse
 
 
@@ -19,6 +19,7 @@ class YAML_CONFIG_KEY():
     INTERFACE_ASSERT_DATA_SETUP = 'setup'
     INTERFACE_REQUEST_DATA_TEARDOWN = 'tearDown'
     INTERFACE_REQUEST_HEADERS = 'headers'
+    INTERFACE_CACHE_UPDATE_DATA = 'CACHE_UPDATE_DATA'
 
 
 class FindFile():
@@ -151,13 +152,12 @@ class ParsingData():
 
         old_data = copy.deepcopy(self.yaml_data)
 
-        # request_data = self.get_interface_data(interface_name=interface_name,
-        #                                        assert_name=assert_name,
-        #                                        yaml_config_key=YAML_CONFIG_KEY.INTERFACE_REQUEST_DATA)
-
         request_data = old_data[interface_name][assert_name][YAML_CONFIG_KEY.INTERFACE_REQUEST_DATA]
-        if request_data != None and json.dumps(request_data).find('$') != -1:
-            self.recursive_replace_json_expr(replace_value=request_data)
+
+        if request_data == None:
+            return request_data
+
+        self.recursive_replace_json_expr(replace_value=request_data)
 
         request_data = json.dumps(request_data)
 
@@ -174,12 +174,7 @@ class ParsingData():
         assert_value = self.get_interface_data(interface_name=interface_name,
                                                assert_name=assert_name,
                                                yaml_config_key=YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA)
-
-        if assert_value != None and json.dumps(assert_value).find('$') != -1:
-            self.recursive_replace_json_expr(assert_value)
-            assert_value = self.get_interface_data(interface_name=interface_name,
-                                                   assert_name=assert_name,
-                                                   yaml_config_key=YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA)
+        self.recursive_replace_json_expr(assert_value)
 
         return assert_value
 
@@ -253,6 +248,7 @@ class ParsingData():
 		:return:
 		'''
         for interface_name, value in self.yaml_data.items():
+            if value == None: continue
             if value.__contains__(host_key) and operator.ne(interface_name, YAML_CONFIG_KEY.OBJECT_HOST):
                 return interface_name
 
@@ -393,7 +389,7 @@ class ParsingData():
 
         return json_value
 
-    def recursive_replace_json_expr(self, replace_value):
+    def recursive_replace_json_expr(self, replace_value, interface_name=None, assert_name=None):
         '''
 		递归替换请求数据内json_expr
 		:param replace_value:
@@ -403,10 +399,11 @@ class ParsingData():
 
             for key, value in replace_value.items():
                 if type(value) != dict or type(value) != list:
+
                     if isinstance(value, str) and value.find('$') != -1:
                         replace_value[key] = self.multilayer_json_expr(value)
 
-                self.recursive_replace_json_expr(value)
+                self.recursive_replace_json_expr(value, interface_name=interface_name, assert_name=assert_name)
 
         elif isinstance(replace_value, list):
 
@@ -415,7 +412,7 @@ class ParsingData():
                     if isinstance(list_value, str) and list_value.find('$') != -1:
                         replace_value[index] = self.multilayer_json_expr(list_value)
 
-                self.recursive_replace_json_expr(list_value)
+                self.recursive_replace_json_expr(list_value, interface_name=interface_name, assert_name=assert_name)
 
     def multilayer_json_expr(self, json_expr):
         '''
@@ -440,6 +437,36 @@ class ParsingData():
         end_index = json_expr.find('}') + 1
         new_json_expr = self.find_json_expr_value(json_expr[start_index:end_index])
         return new_json_expr
+
+    def save_interface_update_cache_data(self, interface_name, assert_name, update_value):
+
+        cache_data = self.yaml_data[YAML_CONFIG_KEY.INTERFACE_CACHE_UPDATE_DATA]
+
+        if cache_data == None:
+            cache_data = {}
+
+        cache_data.update({interface_name: {assert_name: update_value}})
+
+    def get_interface_update_cache_data(self, interface_name, assert_name):
+        '''
+        获取接口更新缓存数据
+        '''
+
+        return self.yaml_data[YAML_CONFIG_KEY.INTERFACE_CACHE_UPDATE_DATA]
+
+    def joine_timestamp(self, value, interface_name=None, assert_name=None):
+
+        if type(value) != str:
+            return value
+        if value.find == -1:
+            return value
+
+        timestamp = int(time.time()) * 1000
+        new_value = value.format(timestamp=timestamp)
+        self.save_interface_update_cache_data(interface_name=interface_name,
+                                              assert_name=assert_name,
+                                              update_value=new_value)
+        return new_value
 
 
 if __name__ == '__main__':

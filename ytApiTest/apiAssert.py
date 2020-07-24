@@ -34,7 +34,10 @@ class InterFaceAssert():
                                                   assert_name=assert_name)
         response_json = self.parsing_data.parse_response_data(response)
         interface_url = response.url
-        params = json.loads(response.request.body)
+        if response.request.method == "POST" and response.request.body != None:
+            params = json.loads(response.request.body)
+        else:
+            params = None
         assert_value = kwargs.get('assert_value')
         if operator.eq(assert_value, None):
             assert_value = self.parsing_data.get_interface_assert_value(interface_name=interface_name,
@@ -52,6 +55,7 @@ class InterFaceAssert():
                     'response': response_json,
                     'params': params,
                     'headers': headers,
+                    'assert_value': assert_value,
                     "error_info": error_info}
 
         info = '\n TITLE      =   {title}' \
@@ -61,6 +65,7 @@ class InterFaceAssert():
                '\n\n JONS_EXPR  =   {json_expr}' \
                '\n\n HEADERS    =   {headers}' \
                '\n\n RESPONSE   =   {response}' \
+               '\n\n ASSERTVALUE   =   {assert_value}' \
                '\n\n ERRORINFO  =   {error_info}'.format_map(info_dic)
 
         self.request.send_case_error_info(error_info=info)
@@ -174,34 +179,15 @@ class InterFaceAssert():
                                                       json_expr=json_expr,
                                                       interface_name=interface_name,
                                                       assert_name=assert_name)
-
-        # if find_value is False:
-        # 	assert operator.eq(find_value, assert_value), self.format_interface_send_info(response=response_data,
-        # 	                                                                              interface_name=interface_name,
-        # 	                                                                              assert_name=assert_name,
-        # 	                                                                              find_value=find_value,
-        # 	                                                                              assert_value=assert_value,
-        # 	                                                                              title='相等断言失败')
-        # 	return
-        # self.assert_length_eq(response_value=find_value,
-        #                       assert_value=assert_value,
-        #                       interface_name=kwargs.get('interface_name'),
-        #                       assert_name=kwargs.get('assert_name'),
-        #                       response=response_data)
-
         try:
-            # self.compare_json_value(find_json=find_value,
-            #                         assert_json=assert_value,
-            #                         interface_name=interface_name,
-            #                         assert_name=assert_name,
-            #                         response=response_data)
 
             deff = DeepDiff(assert_value, find_value)
             assert not deff, self.format_interface_send_info(response=response_data,
+                                                             assert_value=assert_value,
                                                              interface_name=interface_name,
                                                              assert_name=assert_name,
                                                              error_info=deff,
-                                                             title='接口相等断言失败')
+                                                             title='接口返回数据与断言数据不一致')
 
         finally:
             self.run_case_request(
@@ -343,7 +329,6 @@ class InterFaceAssert():
         :param request_list:
         :return:
         '''
-
         if request_list == None or len(request_list) == 0:
             return
 

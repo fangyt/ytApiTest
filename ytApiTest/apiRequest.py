@@ -4,7 +4,7 @@
 # Author : fyt
 # File   : apiRequest.py
 
-import requests
+import requests,json
 
 from ytApiTest.apiData import ParsingData
 from dingtalkchatbot.chatbot import DingtalkChatbot
@@ -136,7 +136,7 @@ class InterFaceReq():
                                             host_key=host_key)
 
         response = requests.get(url=url,
-                                params=params,
+                                params=json.loads(params),
                                 headers=headers,
                                 verify=False)
 
@@ -159,8 +159,10 @@ class InterFaceReq():
         params = self.parsing_data.get_interface_request_data(interface_name=interface_name,
                                                               assert_name=assert_name)
 
+
         headers = self.get_interface_cookie(url=url,
                                             host_key=host_key)
+
         requests.packages.urllib3.disable_warnings()
 
         response = requests.post(url=url,

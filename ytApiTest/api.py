@@ -99,7 +99,7 @@ def update_interface_request_data(interface_name, assert_name, new_request_data:
                                                        new_request_data=new_request_data)
 
 
-def assert_body_eq_assert_value(response_data=None, assert_value=None, json_expr=None, **kwargs):
+def assert_body_eq_assert_value(response_data=None, assert_value=None, json_expr=None, method='post', **kwargs):
     '''
     断言
     :param response_data: 接口返回值
@@ -111,8 +111,13 @@ def assert_body_eq_assert_value(response_data=None, assert_value=None, json_expr
         InterFaceAssert().run_case_request(
             request_list=ParsingData().get_interface_setup_list(interface_name=kwargs.get('interface_name'),
                                                                 assert_name=kwargs.get('assert_name')))
-        response_data = post(interface_name=kwargs.get('interface_name'), assert_name=kwargs.get('assert_name'),
-                             host_key=kwargs.get('host_key'))
+        if method == 'get':
+
+            response_data = get(interface_name=kwargs.get('interface_name'), assert_name=kwargs.get('assert_name'),
+                                host_key=kwargs.get('host_key'))
+        else:
+            response_data = post(interface_name=kwargs.get('interface_name'), assert_name=kwargs.get('assert_name'),
+                                 host_key=kwargs.get('host_key'))
         assert_value = get_interface_case_assert_data(interface_name=kwargs.get('interface_name'),
                                                       assert_name=kwargs.get('assert_name'))
         json_expr = get_interface_json_path(interface_name=kwargs.get('interface_name'),
@@ -162,6 +167,14 @@ def assert_response_url_status(response, **kwargs):
                         host_key=kwargs.get('host_key'))
 
     InterFaceAssert().assert_response_url_status(response=response)
+
+
+def get_interface_update_cache_data(interface_name, assert_name):
+    '''
+    获取缓存接口请求数据
+    '''
+    return ParsingData().get_interface_update_cache_data(interface_name=interface_name,
+                                                         assert_name=assert_name)
 
 
 if __name__ == '__main__':
