@@ -468,6 +468,38 @@ class ParsingData():
                                               update_value=new_value)
         return new_value
 
+    def replace_assert_json_expr(self, replace_value, replace_dic: dict):
+        '''
+        替换断言数据json_path
+        :param replace_dic:
+        :return:
+        '''
+
+        if isinstance(replace_value, dict):
+            for key, dic_value in replace_value.items():
+
+                if (type(dic_value) != dict and type(dic_value) != list) and isinstance(dic_value, str):
+
+                    if dic_value.find('{') != -1:
+                        try:
+                            replace_value[key] = dic_value.format_map(replace_dic)
+                        except KeyError:
+                            warnings.warn('json_expr替换失败', dic_value)
+
+                self.replace_assert_json_expr(replace_value=dic_value, replace_dic=replace_dic)
+
+        elif isinstance(replace_value, list):
+
+            for index, list_value in enumerate(replace_value):
+
+                if (type(list_value) != dict and type(list_value) != list) and isinstance(list_value, str):
+                    if list_value.find('{') != -1:
+                        try:
+                            list_value[index] = list_value.format_map(replace_dic)
+                        except KeyError:
+                            warnings.warn('json_expr替换失败', list_value)
+
+                self.replace_assert_json_expr(replace_value=list_value, replace_dic=replace_dic)
 
 if __name__ == '__main__':
     pass

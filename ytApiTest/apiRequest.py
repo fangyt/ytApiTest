@@ -131,9 +131,15 @@ class InterFaceReq():
                                                   host_key=host_key)
         params = self.parsing_data.get_interface_request_data(interface_name=interface_name,
                                                               assert_name=assert_name)
+        interface_headers = self.parsing_data.get_interface_request_header(interface_name=interface_name,
+                                                                           assert_name=assert_name)
 
         headers = self.get_interface_cookie(url=url,
                                             host_key=host_key)
+
+        if interface_name != None:
+
+            headers.update(interface_headers)
 
         response = requests.get(url=url,
                                 params=json.loads(params),
@@ -158,13 +164,15 @@ class InterFaceReq():
                                                   host_key=host_key)
         params = self.parsing_data.get_interface_request_data(interface_name=interface_name,
                                                               assert_name=assert_name)
-
+        interface_headers = self.parsing_data.get_interface_request_header(interface_name=interface_name,
+                                                                           assert_name=assert_name)
 
         headers = self.get_interface_cookie(url=url,
                                             host_key=host_key)
 
         requests.packages.urllib3.disable_warnings()
-
+        if interface_name != None:
+            headers.update(interface_headers)
         response = requests.post(url=url,
                                  data=params,
                                  headers=headers,

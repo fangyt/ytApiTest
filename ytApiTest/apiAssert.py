@@ -333,7 +333,13 @@ class InterFaceAssert():
             return
 
         for dic in request_list:
-            respons_data = self.request.post(interface_name=dic['interface_name'],
+            if dic.get('method') == 'get':
+
+                self.request.get(interface_name=dic['interface_name'],
+                                  assert_name=dic['assert_name'],
+                                  host_key=dic.get('host_key'))
+
+            self.request.post(interface_name=dic['interface_name'],
                                              assert_name=dic['assert_name'],
                                              host_key=dic.get('host_key'))
 

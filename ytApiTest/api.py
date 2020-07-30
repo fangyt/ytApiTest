@@ -175,7 +175,17 @@ def get_interface_update_cache_data(interface_name, assert_name):
     '''
     return ParsingData().get_interface_update_cache_data(interface_name=interface_name,
                                                          assert_name=assert_name)
+def replace_assert_json_expr(interface_name:str,assert_name:str,replace_dic:dict):
+    '''
+    更换json_expr 值
+    :param interface_name:
+    :param assert_name:
+    :param replace_dic:
+    :return:
+    '''
+    replace_value = get_interface_case_assert_data(interface_name=interface_name,assert_name=assert_name)
 
+    ParsingData().replace_assert_json_expr(replace_value=replace_value,replace_dic=replace_dic)
 
 if __name__ == '__main__':
     pass
