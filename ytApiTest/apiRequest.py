@@ -85,7 +85,7 @@ class InterFaceReq():
             if response_json.get('data').__contains__('userinfo'):
                 interface_headers.update({'Content-Type': 'application/json',
                                           'Cookie': 'userId={userId}; '
-                                                    'sessionId={sessionId};'.format(
+                                                    'sessionId={sessionId};weId=supermonkey-weapp'.format(
                                               userId=response.json()['data']['userinfo']['userId'],
                                               sessionId=response.json()['data']['sessionId']),
                                           })

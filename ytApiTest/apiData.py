@@ -174,7 +174,11 @@ class ParsingData():
         assert_value = self.get_interface_data(interface_name=interface_name,
                                                assert_name=assert_name,
                                                yaml_config_key=YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA)
-        self.recursive_replace_json_expr(assert_value)
+        if isinstance(assert_value, str):
+            if assert_value.find('$') != -1:
+                assert_value = self.find_json_expr_value(assert_value)
+        else:
+            self.recursive_replace_json_expr(assert_value)
 
         return assert_value
 
