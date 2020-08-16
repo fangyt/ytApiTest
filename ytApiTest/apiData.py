@@ -6,7 +6,7 @@
 
 import os, yaml, operator, jsonpath, requests, json, warnings, copy, time
 from urllib.parse import urlparse
-
+from  ytApiTest import apiRequest
 
 class YAML_CONFIG_KEY():
     OBJECT_HOST = 'OBJECT_HOST'
@@ -20,7 +20,7 @@ class YAML_CONFIG_KEY():
     INTERFACE_REQUEST_DATA_TEARDOWN = 'tearDown'
     INTERFACE_REQUEST_HEADERS = 'headers'
     INTERFACE_CACHE_UPDATE_DATA = 'CACHE_UPDATE_DATA'
-
+    INTERFACE_CACHE_METHOD = 'method'
 
 class FindFile():
 
@@ -37,7 +37,6 @@ class FindFile():
 
                     if bool(os.path.splitext(file_name).count('.yaml')):
                         return os.path.join(dirpath, file_name)
-
 
 class YamlSingleton():
     _obj = None
@@ -83,7 +82,6 @@ class YamlSingleton():
 		'''
         self.res_data.update(response)
 
-
 class ParsingData():
 
     def __init__(self):
@@ -91,8 +89,9 @@ class ParsingData():
         self.yaml_data = YamlSingleton().yaml_data
         self.response_data = YamlSingleton().res_data
         self.yaml_key = YAML_CONFIG_KEY
+        self.req = apiRequest.InterFaceReq()
 
-    def get_interface_data(self, interface_name, assert_name, yaml_config_key):
+    def get_interface_data(self, interface_name, assert_name, yaml_config_key=None):
 
         '''
         获取接口数据
@@ -107,21 +106,16 @@ class ParsingData():
 
             if self.yaml_data[interface_name][assert_name].__contains__(yaml_config_key):
                 return self.yaml_data[interface_name][assert_name][yaml_config_key]
+            elif operator.eq(yaml_config_key,None):return self.yaml_data[interface_name][assert_name]
 
-    def get_object_host(self, host_key: str = None):
+
+    def get_object_host(self):
         '''
         获取项目host ，默认返回第一个HOST
         :param host_key:
         :return:
         '''
-        if operator.eq(host_key, None):
-
-            return iter(self.yaml_data[YAML_CONFIG_KEY.OBJECT_HOST].values()).__next__()
-
-        else:
-
-            if self.yaml_data[YAML_CONFIG_KEY.OBJECT_HOST].__contains__(host_key):
-                return self.yaml_data[YAML_CONFIG_KEY.OBJECT_HOST][host_key]
+        return self.yaml_data[YAML_CONFIG_KEY.OBJECT_HOST]
 
     def get_interface_url(self, interface_name: str, host_key: str = None):
         '''
@@ -134,13 +128,13 @@ class ParsingData():
 
             url = self.yaml_data[interface_name][YAML_CONFIG_KEY.INTERFACE_URL]
 
-            if url.find('http') != -1:
+            if url.find('http') != -1: return url
 
-                return url
+        return self.get_headers_key(host_key) + url
 
-            else:
+    def get_headers_key(self,host_key):
 
-                return self.get_object_host(host_key=host_key) + url
+        return host_key if operator.ne(host_key,None) else iter(self.get_object_host().values()).__next__()
 
     def get_interface_request_data(self, interface_name, assert_name):
         '''
@@ -159,7 +153,9 @@ class ParsingData():
 
         self.recursive_replace_json_expr(replace_value=request_data)
 
-        request_data = json.dumps(request_data)
+        if operator.ne(self.get_interface_case_req_method(interface_name,assert_name),'post') :
+
+            request_data = json.dumps(request_data)
 
         return request_data
 
@@ -232,20 +228,12 @@ class ParsingData():
                                             yaml_config_key=YAML_CONFIG_KEY.INTERFACE_JSON_PATH)
         return json_expr
 
-    def get_interface_url_host_key(self, url: str):
+    def get_interface_case_req_method(self,interface_name, assert_name):
 
-        '''
-		获取URL对应HOST key值
-		:param url: url
-		:return:
-		'''
-        object_host_dict = self.yaml_data[YAML_CONFIG_KEY.OBJECT_HOST]
-        url_netloc = urlparse(url).netloc
-        for key, value in object_host_dict.items():
-            if operator.eq(urlparse(value).netloc, url_netloc):
-                return key
+        default_method = self.yaml_data[interface_name][assert_name][YAML_CONFIG_KEY.INTERFACE_CACHE_METHOD]
+        return default_method if operator.ne(default_method,None) else 'post'
 
-    def get_interface_url_interface_name(self, host_key: str):
+    def get_interface_url_interface_name(self, assert_name: str):
         '''
 		通过hostkey获取接口名称
 		:param host_key:
@@ -253,7 +241,7 @@ class ParsingData():
 		'''
         for interface_name, value in self.yaml_data.items():
             if value == None: continue
-            if value.__contains__(host_key) and operator.ne(interface_name, YAML_CONFIG_KEY.OBJECT_HOST):
+            if value.__contains__(assert_name) and operator.ne(interface_name, YAML_CONFIG_KEY.OBJECT_HOST):
                 return interface_name
 
     def get_interface_response_data(self):
@@ -275,14 +263,66 @@ class ParsingData():
 		获取接口自定义请求头
 		:return:
 		'''
-        header = self.get_interface_data(interface_name=interface_name,
+        headers = self.get_interface_data(interface_name=interface_name,
                                          assert_name=assert_name,
                                          yaml_config_key=YAML_CONFIG_KEY.INTERFACE_REQUEST_HEADERS)
 
-        if operator.eq(header, None):
-            header = {'Content-Type': 'application/json'}
+        return headers
 
-        return header
+    def get_interface_req_headers(self,interface_name,assert_name,**kwargs):
+
+        headers_key = self.get_headers_key(kwargs.get('host_key'))
+        if self.response_data.__contains__(headers_key): return self.response_data.get(headers_key)
+
+        setup_list = self.get_interface_setup_list(interface_name=interface_name, assert_name=assert_name)
+        default_headers = {'Content-Type': 'application/json'}
+        if operator.ne(setup_list,None):
+
+            for dic in setup_list:
+                interface_name_ = dic.get('interface_name')
+                assert_name_ = dict.get('assert_name')
+                url = self.get_interface_url(interface_name_)
+                data = self.get_interface_request_data(interface_name_,assert_name_)
+                method = kwargs.get('method') if operator.ne(kwargs.get('method'),None) else self.get_interface_case_req_method(interface_name=interface_name, assert_name=assert_name_)
+                params = json.loads(data) if operator.ne(method,'get') else None
+                headers = self.get_interface_request_header(interface_name_,assert_name_)
+                headers = headers if operator.ne(headers,None) else default_headers
+                self.req.req(method=method,url=url,data=data,params=params,headers=headers)
+
+
+        headers_ = self.get_interface_request_header(interface_name=interface_name,assert_name=assert_name)
+        headers = headers_ if operator.ne(headers_, None) else default_headers
+        interface_name = self.get_interface_url_interface_name(interface_name)
+        url = self.get_interface_url(interface_name=interface_name,host_key=assert_name)
+        data = self.get_interface_request_data(interface_name=interface_name,assert_name=assert_name)
+        method = kwargs.get('method') if operator.ne(kwargs.get('method'),None) else self.get_interface_case_req_method(interface_name=interface_name,assert_name=assert_name)
+
+        respons = self.req.req(method=method,headers=headers,data=data,url=url)
+
+        error_info = "登录信息缓存失败url={url}\n\nreq_data={req_data}\n\nrespons{respons}".format(url=respons.url,
+                                                                                           req_data=respons.request.body,
+                                                                                           respons=respons.text)
+        assert respons.json()['rtn'] == 0,error_info
+        if respons.request._cookies:
+            headers.update(respons.request.headers)
+            return headers
+        rep_json = respons.json()['data']
+
+        if rep_json.__contains__('userinfo'):
+
+            headers.update({'Content-Type': 'application/json',
+                                          'Cookie': 'userId={userId}; '
+                                                    'sessionId={sessionId};weId=supermonkey-weapp'.format(
+                                              userId=rep_json['userinfo']['userId'],
+                                              sessionId=rep_json['sessionId']),
+                                          })
+
+        elif rep_json.__contains__('token'):
+
+            headers.update({'authorization': rep_json['token']})
+
+        self.save_response_data({assert_name:headers})
+        return headers
 
     def get_interface_assert_name(self, assert_value: dict):
         '''
@@ -368,10 +408,10 @@ class ParsingData():
 
     def find_json_expr_value(self, json_expr):
         '''
-		查找json_expr 返回值
-		:param json_expr:
-		:return:
-		'''
+        查找json_expr 返回值
+        :param json_expr:
+        :return:
+        '''
         index = None
         temp_json_expr = json_expr
         if json_expr.find('/') != -1:
@@ -386,8 +426,8 @@ class ParsingData():
             json_value = jsonpath.jsonpath(self.yaml_data, json_expr)
 
         else:
-            warnings.warn('未查找到json_expr值{json_expr}'.format(json_expr=json_expr))
-            return json_expr
+            warnings.warn('未查找到json_expr值{json_expr}'.format(json_expr=temp_json_expr))
+            return temp_json_expr
         if temp_json_expr.find('/') != -1:
             return json_value[index]
 
@@ -395,17 +435,17 @@ class ParsingData():
 
     def recursive_replace_json_expr(self, replace_value, interface_name=None, assert_name=None):
         '''
-		递归替换请求数据内json_expr
-		:param replace_value:
-		:return:
-		'''
+        递归替换请求数据内json_expr
+        :param replace_value:
+        :return:
+        '''
         if isinstance(replace_value, dict):
 
             for key, value in replace_value.items():
                 if type(value) != dict or type(value) != list:
 
                     if isinstance(value, str) and value.find('$') != -1:
-                        replace_value[key] = self.multilayer_json_expr(value)
+                        replace_value[key] = self.find_json_expr_value(value)
 
                 self.recursive_replace_json_expr(value, interface_name=interface_name, assert_name=assert_name)
 
@@ -414,96 +454,33 @@ class ParsingData():
             for index, list_value in enumerate(replace_value):
                 if type(list_value) != dict or type(list_value) != list:
                     if isinstance(list_value, str) and list_value.find('$') != -1:
-                        replace_value[index] = self.multilayer_json_expr(list_value)
+                        replace_value[index] = self.find_json_expr_value(list_value)
 
                 self.recursive_replace_json_expr(list_value, interface_name=interface_name, assert_name=assert_name)
 
-    def multilayer_json_expr(self, json_expr):
-        '''
-		多层json_expr
-		:param json_expr: 多层表达式
-		:return:
-		'''
-        if json_expr.find('{') == -1:
-            return self.find_json_expr_value(json_expr)
+    def combination_req_data(self, interface_name=None, assert_name=None, host_key=None,method=None):
 
-        return self.find_json_expr_value(self.parse_multilayer_json_expr(json_expr))
+        url = self.get_interface_url(interface_name=interface_name,
+                                     host_key=host_key)
 
-    def parse_multilayer_json_expr(self, json_expr):
-        '''
-		解析多层为一层并返回
-		:param json_expr:
-		:return:
-		'''
-        if json_expr == None or json_expr.find('{') == -1:
-            return json_expr
-        start_index = json_expr.find('{')
-        end_index = json_expr.find('}') + 1
-        new_json_expr = self.find_json_expr_value(json_expr[start_index:end_index])
-        return new_json_expr
+        data = self.get_interface_request_data(interface_name=interface_name,
+                                               assert_name=assert_name)
+        headers = self.get_interface_req_headers(interface_name=interface_name,
+                                                 assert_name=assert_name,
+                                                 host_key=host_key)
+        des = self.get_interface_des(interface_name=interface_name,assert_name=assert_name)
+        setup = self.get_interface_setup_list(interface_name=interface_name,assert_name=assert_name)
+        req_method = self.get_interface_case_req_method(interface_name,assert_name)
+        req_method = req_method if operator.ne(method,None) else method
+        json_expr = self.get_interface_json_path(interface_name,assert_name)
+        return {YAML_CONFIG_KEY.INTERFACE_URL: url,
+                YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA: data,
+                YAML_CONFIG_KEY.INTERFACE_REQUEST_HEADERS: headers,
+                YAML_CONFIG_KEY.INTERFACE_CASE_DES:des,
+                YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA_SETUP:setup,
+                YAML_CONFIG_KEY.INTERFACE_CACHE_METHOD:req_method,
+                YAML_CONFIG_KEY.INTERFACE_JSON_PATH:json_expr}
 
-    def save_interface_update_cache_data(self, interface_name, assert_name, update_value):
-
-        cache_data = self.yaml_data[YAML_CONFIG_KEY.INTERFACE_CACHE_UPDATE_DATA]
-
-        if cache_data == None:
-            cache_data = {}
-
-        cache_data.update({interface_name: {assert_name: update_value}})
-
-    def get_interface_update_cache_data(self, interface_name, assert_name):
-        '''
-        获取接口更新缓存数据
-        '''
-
-        return self.yaml_data[YAML_CONFIG_KEY.INTERFACE_CACHE_UPDATE_DATA]
-
-    def joine_timestamp(self, value, interface_name=None, assert_name=None):
-
-        if type(value) != str:
-            return value
-        if value.find == -1:
-            return value
-
-        timestamp = int(time.time()) * 1000
-        new_value = value.format(timestamp=timestamp)
-        self.save_interface_update_cache_data(interface_name=interface_name,
-                                              assert_name=assert_name,
-                                              update_value=new_value)
-        return new_value
-
-    def replace_assert_json_expr(self, replace_value, replace_dic: dict):
-        '''
-        替换断言数据json_path
-        :param replace_dic:
-        :return:
-        '''
-
-        if isinstance(replace_value, dict):
-            for key, dic_value in replace_value.items():
-
-                if (type(dic_value) != dict and type(dic_value) != list) and isinstance(dic_value, str):
-
-                    if dic_value.find('{') != -1:
-                        try:
-                            replace_value[key] = dic_value.format_map(replace_dic)
-                        except KeyError:
-                            warnings.warn('json_expr替换失败', dic_value)
-
-                self.replace_assert_json_expr(replace_value=dic_value, replace_dic=replace_dic)
-
-        elif isinstance(replace_value, list):
-
-            for index, list_value in enumerate(replace_value):
-
-                if (type(list_value) != dict and type(list_value) != list) and isinstance(list_value, str):
-                    if list_value.find('{') != -1:
-                        try:
-                            list_value[index] = list_value.format_map(replace_dic)
-                        except KeyError:
-                            warnings.warn('json_expr替换失败', list_value)
-
-                self.replace_assert_json_expr(replace_value=list_value, replace_dic=replace_dic)
 
 if __name__ == '__main__':
-    pass
+    print({"2":None})

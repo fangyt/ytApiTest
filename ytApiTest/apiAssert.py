@@ -7,7 +7,7 @@
 import requests, jsonpath, operator, json
 from deepdiff import DeepDiff
 
-from ytApiTest import apiData, apiRequest
+from . import apiData, apiRequest
 
 
 class InterFaceAssert():

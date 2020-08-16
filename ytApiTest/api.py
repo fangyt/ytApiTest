@@ -67,12 +67,6 @@ def get_interface_json_path(interface_name, assert_name):
     return ParsingData().get_interface_json_path(interface_name=interface_name,
                                                  assert_name=assert_name)
 
-
-def get_interface_des(interface_name, assert_name):
-    return ParsingData().get_interface_des(interface_name=interface_name,
-                                           assert_name=assert_name)
-
-
 def update_interface_json_path(interface_name, assert_name, new_value: dict):
     '''
     修改json_path 路径
@@ -107,25 +101,37 @@ def assert_body_eq_assert_value(response_data=None, assert_value=None, json_expr
     :param json_expr: jsonpath表达式
     '''
 
-    if kwargs.__contains__('interface_name') and kwargs.__contains__('assert_name'):
-        InterFaceAssert().run_case_request(
-            request_list=ParsingData().get_interface_setup_list(interface_name=kwargs.get('interface_name'),
-                                                                assert_name=kwargs.get('assert_name')))
-        if method == 'get':
 
-            response_data = get(interface_name=kwargs.get('interface_name'), assert_name=kwargs.get('assert_name'),
-                                host_key=kwargs.get('host_key'))
-        else:
-            response_data = post(interface_name=kwargs.get('interface_name'), assert_name=kwargs.get('assert_name'),
-                                 host_key=kwargs.get('host_key'))
-        assert_value = get_interface_case_assert_data(interface_name=kwargs.get('interface_name'),
-                                                      assert_name=kwargs.get('assert_name'))
-        json_expr = get_interface_json_path(interface_name=kwargs.get('interface_name'),
-                                            assert_name=kwargs.get('assert_name'))
+    if response_data:
+         return InterFaceAssert().assert_eq(response_data=response_data,assert_value=assert_value,json_expr=json_expr)
 
-    InterFaceAssert().assert_eq(response_data=response_data,
+    interface_name = kwargs.get('interface_name')
+    assert_name = kwargs.get('assert_name')
+    host_key = kwargs.get('host_key')
+    req_method = kwargs.get('method')
+
+    req_data_dic = ParsingData().combination_req_data(interface_name=interface_name,assert_name=assert_name,host_key=host_key,method=req_method)
+    response = InterFaceReq().req(req_data_dic)
+    return InterFaceAssert().assert_eq(response_data=response,
                                 assert_value=assert_value,
                                 json_expr=json_expr, **kwargs)
+    # if kwargs.__contains__('interface_name') and kwargs.__contains__('assert_name'):
+    #     InterFaceAssert().run_case_request(
+    #         request_list=ParsingData().get_interface_setup_list(interface_name=kwargs.get('interface_name'),
+    #                                                             assert_name=kwargs.get('assert_name')))
+    #     if method == 'get':
+    #
+    #         response_data = get(interface_name=kwargs.get('interface_name'), assert_name=kwargs.get('assert_name'),
+    #                             host_key=kwargs.get('host_key'))
+    #     else:
+    #         response_data = post(interface_name=kwargs.get('interface_name'), assert_name=kwargs.get('assert_name'),
+    #                              host_key=kwargs.get('host_key'))
+    #     assert_value = get_interface_case_assert_data(interface_name=kwargs.get('interface_name'),
+    #                                                   assert_name=kwargs.get('assert_name'))
+    #     json_expr = get_interface_json_path(interface_name=kwargs.get('interface_name'),
+    #                                         assert_name=kwargs.get('assert_name'))
+
+
 
 
 def assert_body_include_value(response_data=None, assert_value=None, json_expr=None, **kwargs):
