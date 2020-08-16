@@ -114,7 +114,7 @@ def assert_body_eq_assert_value(response_data=None, assert_value=None, json_expr
     response = InterFaceReq().req(req_data_dic)
     return InterFaceAssert().assert_eq(response_data=response,
                                 assert_value=assert_value,
-                                json_expr=json_expr, **kwargs)
+                                json_expr=json_expr, **kwargs.update(req_data_dic))
     # if kwargs.__contains__('interface_name') and kwargs.__contains__('assert_name'):
     #     InterFaceAssert().run_case_request(
     #         request_list=ParsingData().get_interface_setup_list(interface_name=kwargs.get('interface_name'),
