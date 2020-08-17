@@ -22,7 +22,7 @@ class InterFaceReq():
     def req(self, **kwargs):
 
         requests.packages.urllib3.disable_warnings()
-        response = requests.request( method=kwargs.get(self.data_key.INTERFACE_CACHE_METHOD), url=kwargs.get(self.data_key.INTERFACE_URL),params=kwargs.get(self.data_key.INTERFACE_REQUEST_DATA),data=kwargs.get('data'),headers=kwargs.get('headers'),verify=False, **kwargs)
+        response = requests.request( method=kwargs.get(self.data_key.INTERFACE_CACHE_METHOD), url=kwargs.get(self.data_key.INTERFACE_URL),params=kwargs.get(self.data_key.INTERFACE_REQUEST_DATA),data=kwargs.get(self.data_key.INTERFACE_ASSERT_DATA),headers=kwargs.get(self.data_key.INTERFACE_REQUEST_HEADERS),verify=False, **kwargs)
         response.raise_for_status()
         self.parsing_data.save_response_data(response)
         return response

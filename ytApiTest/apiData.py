@@ -108,7 +108,6 @@ class ParsingData():
                 return self.yaml_data[interface_name][assert_name][yaml_config_key]
             elif operator.eq(yaml_config_key,None):return self.yaml_data[interface_name][assert_name]
 
-
     def get_object_host(self):
         '''
         获取项目host ，默认返回第一个HOST
@@ -460,6 +459,29 @@ class ParsingData():
 
     def combination_req_data(self, interface_name=None, assert_name=None, host_key=None,method=None):
 
+
+        setup = self.get_interface_setup_list(interface_name=interface_name,assert_name=assert_name)
+
+        temp_case_list = []
+
+        for case_dic in setup:
+
+            case_data = self.combination_req_data(interface_name=case_dic.get('interface_name'),
+                                                  assert_name=case_dic.get('assert_name'),
+                                                  host_key=case_dic.get('host_key'),
+                                                  method=case_dic.get('method'))
+
+            temp_case_list.append(case_data)
+
+
+
+        return {YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA_SETUP:temp_case_list}.update(self.get_interface_case_req_method(interface_name=interface_name,
+                                                                                                                      assert_name=assert_name,
+                                                                                                                      host_key=host_key,
+                                                                                                                      method=method))
+
+    def combination_case_data(self,interface_name=None, assert_name=None, host_key=None,method=None):
+
         url = self.get_interface_url(interface_name=interface_name,
                                      host_key=host_key)
 
@@ -468,19 +490,25 @@ class ParsingData():
         headers = self.get_interface_req_headers(interface_name=interface_name,
                                                  assert_name=assert_name,
                                                  host_key=host_key)
-        des = self.get_interface_des(interface_name=interface_name,assert_name=assert_name)
-        setup = self.get_interface_setup_list(interface_name=interface_name,assert_name=assert_name)
-        req_method = self.get_interface_case_req_method(interface_name,assert_name)
-        req_method = req_method if operator.ne(method,None) else method
-        json_expr = self.get_interface_json_path(interface_name,assert_name)
+        des = self.get_interface_des(interface_name=interface_name, assert_name=assert_name)
+        req_method = self.get_interface_case_req_method(interface_name, assert_name)
+        req_method = req_method if operator.ne(method, None) else method
+        json_expr = self.get_interface_json_path(interface_name, assert_name)
+
         return {YAML_CONFIG_KEY.INTERFACE_URL: url,
                 YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA: data,
                 YAML_CONFIG_KEY.INTERFACE_REQUEST_HEADERS: headers,
-                YAML_CONFIG_KEY.INTERFACE_CASE_DES:des,
-                YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA_SETUP:setup,
-                YAML_CONFIG_KEY.INTERFACE_CACHE_METHOD:req_method,
-                YAML_CONFIG_KEY.INTERFACE_JSON_PATH:json_expr}
+                YAML_CONFIG_KEY.INTERFACE_CASE_DES: des,
+                YAML_CONFIG_KEY.INTERFACE_CACHE_METHOD: req_method,
+                YAML_CONFIG_KEY.INTERFACE_JSON_PATH: json_expr}
 
+    def req_case_data(self,case_dic:dict):
+
+        if len(case_dic.get(YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA_SETUP)) != 0:
+            for case_dic_data in case_dic.get(YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA_SETUP):
+                self.req.req(case_dic_data)
+
+        return self.req.req(case_dic)
 
 if __name__ == '__main__':
     print({"2":None})
