@@ -6,7 +6,8 @@
 
 import requests
 
-from ytApiTest.apiData import ParsingData,YAML_CONFIG_KEY
+from ytApiTest.apiData import ParsingData
+from  ytApiTest.yamlKey import YAML_CONFIG_KEY
 from dingtalkchatbot.chatbot import DingtalkChatbot
 
 
