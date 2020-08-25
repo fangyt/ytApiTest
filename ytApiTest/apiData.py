@@ -79,27 +79,8 @@ class YamlSingleton():
 
         if YamlSingleton._init_flag:
             YamlSingleton._init_flag = False
-            YamlSingleton.yaml_data = self.get_yaml_data()
+            YamlSingleton.yaml_data = FindFile().get_yaml_data()
             YamlSingleton.res_data = self.res_data
-
-    def get_yaml_data(self):
-        '''
-        获取yaml测试数据
-        :return:
-        '''
-        yaml_data = {}
-        yaml_file_path = FindFile().get_yaml_path()
-
-        assert yaml_file_path, AssertionError('未找到yaml数据文件')
-
-        for path in yaml_file_path:
-            with open(path, encoding='UTF-8') as f:
-                [yaml_data.update({'-'.join(
-                    path.split('/')[-2:] if len(path.split('/')) > 2 else path.split('/')[-1:]).replace(
-                    FindFile().file_name, ''): dic}) for dic in yaml.load_all(f, Loader=yaml.FullLoader)]
-                [yaml_data.update({yaml_dic_key.split('-')[-1]: yaml_data[yaml_dic_key]}) for yaml_dic_key in
-                 yaml_data.copy().keys()]
-        return yaml_data
 
     def update_response_data(self, response: dict):
         '''
@@ -112,33 +93,45 @@ class YamlData():
 
     def __init__(self):
         self.yaml_data = YamlSingleton().yaml_data
+        self._case_data_expr = []
 
-    def yaml_file_data(self, file_name=None):
-        '''
-        param file_name: yaml文件名，存在多个yaml文件时，如果该值不传入以ASCII排序 第一个文件数据
-        :return:
-        '''
-        if file_name != None:
-            return self.yaml_data.get(file_name)
-        yaml_keys = list(self.yaml_data.keys())
-        yaml_keys.sort()
-        yaml_key = yaml_keys[0]
-        return self.yaml_data.get(yaml_key)
+    def case_data_expr(self,interface_name, assert_name):
 
-    def get_case_data(self, interface_name, assert_name, file_name=None):
+       return {yamlKey.YAML_CONFIG_KEY.INTERFACE_URL : '$.' + interface_name + '.' + yamlKey.YAML_CONFIG_KEY.INTERFACE_URL + '/0',
+        yamlKey.YAML_CONFIG_KEY.INTERFACE_CACHE_METHOD : '$.' + interface_name + '.' + yamlKey.YAML_CONFIG_KEY.INTERFACE_CACHE_METHOD + '/0',
+        yamlKey.YAML_CONFIG_KEY.INTERFACE_CASE_DES : '$.' + interface_name + '.' + assert_name + '.' + yamlKey.YAML_CONFIG_KEY.INTERFACE_CASE_DES + '/0',
+        yamlKey.YAML_CONFIG_KEY.INTERFACE_REQUEST_DATA : '$.' + interface_name + '.' + assert_name + '.' + yamlKey.YAML_CONFIG_KEY.INTERFACE_REQUEST_DATA + '/0',
+        yamlKey.YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA : '$.' + interface_name + '.' + assert_name + '.' + yamlKey.YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA + '/0',
+        yamlKey.YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA_SETUP :  '$.' + interface_name + '.' + assert_name + '.' + yamlKey.YAML_CONFIG_KEY.INTERFACE_ASSERT_DATA_SETUP + '/0',
+        yamlKey.YAML_CONFIG_KEY.INTERFACE_REQUEST_DATA_TEARDOWN : '$.' + interface_name + '.' + assert_name + '.' + yamlKey.YAML_CONFIG_KEY.INTERFACE_REQUEST_DATA_TEARDOWN + '/0',
+        yamlKey.YAML_CONFIG_KEY.INTERFACE_REQUEST_HEADERS : '$.' + interface_name + '.' + assert_name + '.' + yamlKey.YAML_CONFIG_KEY.INTERFACE_REQUEST_HEADERS + '/0',
+        yamlKey.YAML_CONFIG_KEY.INTERFACE_CASE_SLEEP : '$.' + interface_name + '.' + assert_name + '.' + yamlKey.YAML_CONFIG_KEY.INTERFACE_CASE_SLEEP + '/0'}
+
+
+    def get_case_data(self, interface_name, assert_name):
         '''
         获取用例数据
         :param interface_name: 接口名称
         :param assert_name:  用例名
-        :param file_name: yaml文件名，存在多个yaml文件时，如果该值不传入以ASCII排序 第一个文件数据
         :return:
         '''
-        json_expr = '$.' + file_name + '.' + interface_name + '.' + assert_name + '/0'
+        case_dic = {}
 
-        if file_name == None:
-            json_expr = '$.' + interface_name + '.' + assert_name + '/0'
+        for case_key,case_expr in self.case_data_expr(interface_name,assert_name).items():
 
-        return self.find_json_expr_value(file_name, json_expr)
+            json_expr_value = self.find_json_expr_value(case_expr)
+            if isinstance(json_expr_value,str):
+                if json_expr_value.find('$') != -1:
+                    json_expr_value = None
+
+            case_dic[case_key] = json_expr_value
+
+        print(case_dic)
+
+
+
+
+
     def replace_case_data(self,interface_name, assert_name, file_name=None):
         '''
         查找json_expr 并将查找到的值替换表达式
@@ -171,15 +164,16 @@ class YamlData():
 
                     replace_obj[index] = self.find_json_expr_value(self.yaml_file_data(file_name=file_name), list_value)
 
-    def find_json_expr_value(self, file_name, expr):
-        json_path_value = jsonpath.jsonpath(self.yaml_file_data(file_name), expr.split('/')[0])
+    def find_json_expr_value(self, expr):
+        json_path_value = jsonpath.jsonpath(self.yaml_data, expr.split('/')[0])
         if json_path_value:
             if self.interception_json_expr_index(expr):
                 return json_path_value[self.interception_json_expr_index(expr)]
             return json_path_value
 
         info = '无法查找到该接口数据' + json_path_value
-        assert json_path_value, info
+        warnings.warn(info)
+        return expr
 
     def interception_json_expr_index(self, json_expr):
 
