@@ -8,12 +8,14 @@ import os, yaml, operator, jsonpath, requests, json, warnings, copy, time,types
 from urllib.parse import urlparse
 from ytApiTest import apiRequest, yamlKey
 
-
 class FindFile():
 
     def __init__(self):
 
         self.file_name = '.yaml'
+        self._yaml_data_list = []
+        self._yaml_data_dic = {}
+        self._main_key = 'key2'
 
     def get_yaml_path(self, dirname=None, filename=None):
         '''
@@ -40,6 +42,25 @@ class FindFile():
 
         return path_list
 
+    def get_yaml_data(self):
+
+        for path in self.get_yaml_path():
+            temp_dic = {}
+
+            with open(path, encoding='UTF-8') as file:
+
+                for yaml_dic in yaml.load_all(file, Loader=yaml.FullLoader):
+                    temp_dic.update(yaml_dic)
+                self._yaml_data_list.append(temp_dic)
+        mian_file_index = [index for index, value in enumerate(self._yaml_data_list) if value.__contains__(self._main_key)][0]
+        mian_yaml_dic = self._yaml_data_list.pop(mian_file_index)
+        for main_key, main_value in mian_yaml_dic.items():
+            temp_list = []
+            temp_list.append(main_value)
+            if jsonpath.jsonpath(self._yaml_data_list, '$[*].{}'.format(main_key)):
+                temp_list.extend(jsonpath.jsonpath(self._yaml_data_list, '$[*].{}'.format(main_key)))
+            mian_yaml_dic[main_key] = temp_list
+        return mian_yaml_dic
 
 class YamlSingleton():
     _obj = None
